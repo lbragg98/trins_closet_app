@@ -17,7 +17,6 @@ type ClosetState = StoredClosetState & {
   selectedShoesId?: string;
   selectedJacketId?: string;
   selectedDressId?: string;
-  selectedAccessoryIds: string[];
   customModelUri?: string;
   activeModelId?: string;
   isHydrated: boolean;
@@ -39,11 +38,12 @@ const defaultSelection = {
   selectedBottomId: "placeholder-bottom-jeans",
   selectedShoesId: "placeholder-shoes-sneakers",
   selectedJacketId: undefined,
-  selectedDressId: undefined,
-  selectedAccessoryIds: ["placeholder-accessory-cap"]
+  selectedDressId: undefined
 };
 
-const normalizeClothingItem = (item: ClothingItem) => {
+const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => {
+  if (!isSupportedCategory(item.category)) return undefined;
+
   const legacyItem = item as ClothingItem & { imageUri?: string };
   const placement = getDefaultPlacementForCategory(item.category);
 
@@ -51,7 +51,7 @@ const normalizeClothingItem = (item: ClothingItem) => {
     ...item,
     originalImageDataUrl: item.originalImageDataUrl ?? legacyItem.imageUri ?? item.cutoutImageDataUrl,
     cutoutImageDataUrl: item.cutoutImageDataUrl ?? legacyItem.imageUri ?? item.originalImageDataUrl,
-    transformedCutoutDataUrl: item.transformedCutoutDataUrl,
+    ...(item.transformedCutoutDataUrl ? { transformedCutoutDataUrl: item.transformedCutoutDataUrl } : {}),
     transform: item.transform ?? { mode: "none", scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, rotation: 0 },
     x: Number.isFinite(item.x) ? item.x : placement.x,
     y: Number.isFinite(item.y) ? item.y : placement.y,
@@ -71,9 +71,15 @@ const normalizeClothingItem = (item: ClothingItem) => {
 };
 
 const ensurePlaceholders = (items: ClothingItem[]) => {
-  const savedItems = items.filter((item) => !item.isPlaceholder).map(normalizeClothingItem);
+  const savedItems = items
+    .filter((item) => !item.isPlaceholder)
+    .map(normalizeClothingItem)
+    .filter((item): item is ClothingItem => item !== undefined);
   return [...placeholderClothingItems, ...savedItems];
 };
+
+const isSupportedCategory = (category: string): category is ClothingCategory =>
+  category === "top" || category === "bottom" || category === "shoes" || category === "jacket" || category === "dress";
 
 const createId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -83,8 +89,7 @@ const getSelectedKey = (category: ClothingCategory) => {
   if (category === "bottom") return "selectedBottomId";
   if (category === "shoes") return "selectedShoesId";
   if (category === "jacket") return "selectedJacketId";
-  if (category === "dress") return "selectedDressId";
-  return "selectedAccessoryIds";
+  return "selectedDressId";
 };
 
 export const useClosetStore = create<ClosetState>((set, get) => ({
@@ -96,7 +101,6 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
   selectedShoesId: defaultSelection.selectedShoesId,
   selectedJacketId: defaultSelection.selectedJacketId,
   selectedDressId: defaultSelection.selectedDressId,
-  selectedAccessoryIds: defaultSelection.selectedAccessoryIds,
   customModelUri: undefined,
   activeModelId: undefined,
   isHydrated: false,
@@ -143,8 +147,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         selectedBottomId: state.selectedBottomId === id ? nextByCategory : state.selectedBottomId,
         selectedShoesId: state.selectedShoesId === id ? nextByCategory : state.selectedShoesId,
         selectedJacketId: state.selectedJacketId === id ? nextByCategory : state.selectedJacketId,
-        selectedDressId: state.selectedDressId === id ? nextByCategory : state.selectedDressId,
-        selectedAccessoryIds: state.selectedAccessoryIds.filter((accessoryId) => accessoryId !== id)
+        selectedDressId: state.selectedDressId === id ? nextByCategory : state.selectedDressId
       };
       void localClosetStorage.deleteClothingItem(id);
       return nextState;
@@ -165,8 +168,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
               bottom: state.selectedBottomId ? [state.selectedBottomId] : [],
               shoes: state.selectedShoesId ? [state.selectedShoesId] : [],
               jacket: state.selectedJacketId ? [state.selectedJacketId] : [],
-              dress: state.selectedDressId ? [state.selectedDressId] : [],
-              accessory: state.selectedAccessoryIds
+              dress: state.selectedDressId ? [state.selectedDressId] : []
             },
             createdAt: new Date().toISOString()
           },
@@ -189,10 +191,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
   setSelectedItem: (category, id) => {
     set((state) => {
       const selectedKey = getSelectedKey(category);
-      const nextState =
-        selectedKey === "selectedAccessoryIds"
-          ? { ...state, selectedAccessoryIds: id ? [id] : [] }
-          : { ...state, [selectedKey]: id };
+      const nextState = { ...state, [selectedKey]: id };
       return nextState;
     });
   },
@@ -210,9 +209,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
             ? get().selectedShoesId
             : category === "jacket"
               ? get().selectedJacketId
-              : category === "dress"
-                ? get().selectedDressId
-                : get().selectedAccessoryIds[0];
+              : get().selectedDressId;
 
     const currentIndex = Math.max(
       0,
@@ -346,7 +343,6 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         selectedShoesId: defaultSelection.selectedShoesId,
         selectedJacketId: defaultSelection.selectedJacketId,
         selectedDressId: defaultSelection.selectedDressId,
-        selectedAccessoryIds: defaultSelection.selectedAccessoryIds,
         activeModelId: normalizedActiveModel?.id,
         customModelUri: normalizedActiveModel?.imageDataUrl,
         isHydrated: true

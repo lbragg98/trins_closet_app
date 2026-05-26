@@ -25,12 +25,10 @@ export const layerOrderByCategory: Record<ClothingCategory, number> = {
   top: 30,
   dress: 35,
   jacket: 40,
-  shoes: 50,
-  accessory: 60
+  shoes: 50
 };
 
 export const placementFramesByCategory: Record<ClothingCategory, PlacementFrame> = {
-  accessory: { width: 38, height: 20 },
   jacket: { width: 50, height: 34 },
   top: { width: 44, height: 30 },
   dress: { width: 48, height: 58 },
@@ -149,10 +147,6 @@ export function calculateJacketPlacement(
   );
 }
 
-export function calculateAccessoryPlacement() {
-  return placementFromCenter("accessory", MODEL_ANCHORS.neck.x, MODEL_ANCHORS.neck.y - 66, 1, layerOrderByCategory.accessory);
-}
-
 export function getDefaultPlacementForCategory(
   category: ClothingCategory,
   modelAnchors: ModelAnchors = MODEL_ANCHORS,
@@ -162,8 +156,7 @@ export function getDefaultPlacementForCategory(
   if (category === "bottom") return calculateBottomPlacement(modelAnchors, imageDimensions);
   if (category === "dress") return calculateDressPlacement(modelAnchors, imageDimensions);
   if (category === "shoes") return calculateShoesPlacement(modelAnchors, imageDimensions);
-  if (category === "jacket") return calculateJacketPlacement(modelAnchors, imageDimensions);
-  return calculateAccessoryPlacement();
+  return calculateJacketPlacement(modelAnchors, imageDimensions);
 }
 
 export function getSuggestedPlacementForCategory(category: ClothingCategory): ClothingPlacement {
@@ -172,15 +165,13 @@ export function getSuggestedPlacementForCategory(category: ClothingCategory): Cl
     bottom: { xPercent: 50, yPercent: 58, scale: 1, rotation: 0, layerOrder: layerOrderByCategory.bottom },
     shoes: { xPercent: 50, yPercent: 85, scale: 0.8, rotation: 0, layerOrder: layerOrderByCategory.shoes },
     jacket: { xPercent: 50, yPercent: 38, scale: 1.1, rotation: 0, layerOrder: layerOrderByCategory.jacket },
-    dress: { xPercent: 50, yPercent: 50, scale: 1.15, rotation: 0, layerOrder: layerOrderByCategory.dress },
-    accessory: { xPercent: 50, yPercent: 22, scale: 0.6, rotation: 0, layerOrder: layerOrderByCategory.accessory }
+    dress: { xPercent: 50, yPercent: 50, scale: 1.15, rotation: 0, layerOrder: layerOrderByCategory.dress }
   };
 
   return suggestions[category];
 }
 
 export const defaultPlacementByCategory: Record<ClothingCategory, DefaultPlacement> = {
-  accessory: getDefaultPlacementForCategory("accessory"),
   jacket: getDefaultPlacementForCategory("jacket"),
   top: getDefaultPlacementForCategory("top"),
   dress: getDefaultPlacementForCategory("dress"),

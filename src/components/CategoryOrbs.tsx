@@ -1,7 +1,7 @@
 import { ClothingCategory } from "../types/closet";
 import { MagicalCategoryOrb } from "./MagicalCategoryOrb";
 
-export type OrbCategory = "top" | "bottom" | "shoes" | "accessory";
+export type OrbCategory = "top" | "bottom" | "shoes";
 
 type CategoryOrbsProps = {
   activeCategory: OrbCategory | null;
@@ -18,11 +18,6 @@ const orbConfig: Array<{
     right?: string;
   };
 }> = [
-  {
-    category: "accessory",
-    label: "Accessories",
-    position: { top: "9%", left: "7%" }
-  },
   {
     category: "top",
     label: "Tops",

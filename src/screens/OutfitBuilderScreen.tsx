@@ -21,7 +21,6 @@ export function OutfitBuilderScreen() {
     selectedShoesId,
     selectedJacketId,
     selectedDressId,
-    selectedAccessoryIds,
     customModelUri,
     saveOutfit,
     setSelectedItem
@@ -32,13 +31,11 @@ export function OutfitBuilderScreen() {
   const shoes = clothingItems.find((item) => item.id === selectedShoesId);
   const jacket = clothingItems.find((item) => item.id === selectedJacketId);
   const dress = clothingItems.find((item) => item.id === selectedDressId);
-  const accessories = clothingItems.filter((item) => selectedAccessoryIds.includes(item.id));
 
   const selectedByCategory: Record<OrbCategory, string | undefined> = {
     top: selectedTopId,
     bottom: selectedBottomId,
-    shoes: selectedShoesId,
-    accessory: selectedAccessoryIds[0]
+    shoes: selectedShoesId
   };
 
   const handleSave = () => {
@@ -66,7 +63,7 @@ export function OutfitBuilderScreen() {
     <ScreenScaffold>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <AppText style={sharedStyles.title}>Perfect Closet</AppText>
+          <AppText style={sharedStyles.title}>Wardrobe Whimsy</AppText>
           <AppText muted style={styles.subtitle}>
             A moonlit fitting room for favorite pieces.
           </AppText>
@@ -79,7 +76,6 @@ export function OutfitBuilderScreen() {
           shoes={shoes}
           jacket={jacket}
           dress={dress}
-          accessories={accessories}
           previewItem={previewItem}
         >
           <CategoryOrbs activeCategory={activeCategory} onCategorySelect={handleCategorySelect} />

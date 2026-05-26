@@ -5,8 +5,7 @@ export const categoryLabels: Record<ClothingCategory, string> = {
   bottom: "Bottoms",
   shoes: "Shoes",
   jacket: "Jackets",
-  dress: "Dresses",
-  accessory: "Accessories"
+  dress: "Dresses"
 };
 
-export const categories: ClothingCategory[] = ["top", "bottom", "shoes", "jacket", "dress", "accessory"];
+export const categories: ClothingCategory[] = ["top", "bottom", "shoes", "jacket", "dress"];

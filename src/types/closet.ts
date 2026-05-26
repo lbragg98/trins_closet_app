@@ -1,4 +1,4 @@
-export type ClothingCategory = "top" | "bottom" | "shoes" | "jacket" | "dress" | "accessory";
+export type ClothingCategory = "top" | "bottom" | "shoes" | "jacket" | "dress";
 
 export type ClothingPlacement = {
   xPercent: number;
@@ -70,5 +70,4 @@ export type SelectedCategoryKey =
   | "selectedBottomId"
   | "selectedShoesId"
   | "selectedJacketId"
-  | "selectedDressId"
-  | "selectedAccessoryIds";
+  | "selectedDressId";

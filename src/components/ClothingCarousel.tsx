@@ -108,7 +108,7 @@ export function ClothingCarousel({
     return (
       <View pointerEvents="box-none" style={styles.emptyWrap}>
         <View style={[styles.emptyMessage, { backgroundColor: scheme === "dark" ? colors.surfaceDark : colors.surface }]}>
-          <AppText style={styles.emptyTitle}>No {activeCategory === "accessory" ? "accessories" : `${activeCategory}s`} added yet</AppText>
+          <AppText style={styles.emptyTitle}>No {activeCategory}s added yet</AppText>
           <AppText muted style={styles.emptySubtitle}>
             Add clothing to use this category
           </AppText>

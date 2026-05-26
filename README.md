@@ -1,6 +1,6 @@
-# Perfect Closet
+# Wardrobe Whimsy
 
-Perfect Closet is a local-only Expo React Native outfit visualizer. Upload transparent clothing images, swipe through pieces by category, and preview outfits layered over a fixed model like a digital paper doll.
+Wardrobe Whimsy is a local-only Expo React Native outfit visualizer. Upload transparent clothing images, swipe through pieces by category, and preview outfits layered over a fixed model like a digital paper doll.
 
 ## Run
 
@@ -11,7 +11,7 @@ npm start
 
 ## Local Background Removal
 
-Perfect Closet uses the open-source local `withoutbg` model through a localhost helper. This does not require API keys, cloud storage, or payment setup.
+Wardrobe Whimsy uses the open-source local `withoutbg` model through a localhost helper. This does not require API keys, cloud storage, or payment setup.
 
 ```bash
 python -m pip install withoutbg fastapi uvicorn python-multipart pillow

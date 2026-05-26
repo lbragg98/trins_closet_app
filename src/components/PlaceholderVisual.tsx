@@ -16,7 +16,6 @@ const categoryColor: Record<ClothingCategory | "model", string> = {
   shoes: colors.green,
   jacket: colors.rose,
   dress: colors.accentSoft,
-  accessory: colors.accentSoft,
   model: "#B99ACF"
 };
 

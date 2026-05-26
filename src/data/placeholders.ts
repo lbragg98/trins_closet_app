@@ -3,7 +3,7 @@ import { getDefaultPlacementForCategory } from "../utils/placement";
 
 const createdAt = "2026-05-25T00:00:00.000Z";
 
-export const PLACEHOLDER_MODEL_URI = "perfect-closet://placeholder-model";
+export const PLACEHOLDER_MODEL_URI = "wardrobe-whimsy://placeholder-model";
 
 export const placeholderClothingItems: ClothingItem[] = [
   {
@@ -11,8 +11,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "White Tee",
     category: "top",
     color: "white",
-    originalImageDataUrl: "perfect-closet://placeholder-top-tee",
-    cutoutImageDataUrl: "perfect-closet://placeholder-top-tee",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-top-tee",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-top-tee",
     ...getDefaultPlacementForCategory("top"),
     createdAt,
     isPlaceholder: true
@@ -22,8 +22,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Soft Cardigan",
     category: "top",
     color: "plum",
-    originalImageDataUrl: "perfect-closet://placeholder-top-cardigan",
-    cutoutImageDataUrl: "perfect-closet://placeholder-top-cardigan",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-top-cardigan",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-top-cardigan",
     ...getDefaultPlacementForCategory("top"),
     createdAt,
     isPlaceholder: true
@@ -33,8 +33,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Blue Jeans",
     category: "bottom",
     color: "blue",
-    originalImageDataUrl: "perfect-closet://placeholder-bottom-jeans",
-    cutoutImageDataUrl: "perfect-closet://placeholder-bottom-jeans",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-bottom-jeans",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-bottom-jeans",
     ...getDefaultPlacementForCategory("bottom"),
     createdAt,
     isPlaceholder: true
@@ -44,8 +44,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Black Skirt",
     category: "bottom",
     color: "black",
-    originalImageDataUrl: "perfect-closet://placeholder-bottom-skirt",
-    cutoutImageDataUrl: "perfect-closet://placeholder-bottom-skirt",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-bottom-skirt",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-bottom-skirt",
     ...getDefaultPlacementForCategory("bottom"),
     createdAt,
     isPlaceholder: true
@@ -55,8 +55,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Clean Sneakers",
     category: "shoes",
     color: "white",
-    originalImageDataUrl: "perfect-closet://placeholder-shoes-sneakers",
-    cutoutImageDataUrl: "perfect-closet://placeholder-shoes-sneakers",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-shoes-sneakers",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-shoes-sneakers",
     ...getDefaultPlacementForCategory("shoes"),
     createdAt,
     isPlaceholder: true
@@ -66,8 +66,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Simple Flats",
     category: "shoes",
     color: "green",
-    originalImageDataUrl: "perfect-closet://placeholder-shoes-flats",
-    cutoutImageDataUrl: "perfect-closet://placeholder-shoes-flats",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-shoes-flats",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-shoes-flats",
     ...getDefaultPlacementForCategory("shoes"),
     createdAt,
     isPlaceholder: true
@@ -77,8 +77,8 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Velvet Blazer",
     category: "jacket",
     color: "violet",
-    originalImageDataUrl: "perfect-closet://placeholder-jacket-blazer",
-    cutoutImageDataUrl: "perfect-closet://placeholder-jacket-blazer",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-jacket-blazer",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-jacket-blazer",
     ...getDefaultPlacementForCategory("jacket"),
     createdAt,
     isPlaceholder: true
@@ -88,31 +88,9 @@ export const placeholderClothingItems: ClothingItem[] = [
     name: "Moon Slip Dress",
     category: "dress",
     color: "gold",
-    originalImageDataUrl: "perfect-closet://placeholder-dress-slip",
-    cutoutImageDataUrl: "perfect-closet://placeholder-dress-slip",
+    originalImageDataUrl: "wardrobe-whimsy://placeholder-dress-slip",
+    cutoutImageDataUrl: "wardrobe-whimsy://placeholder-dress-slip",
     ...getDefaultPlacementForCategory("dress"),
-    createdAt,
-    isPlaceholder: true
-  },
-  {
-    id: "placeholder-accessory-cap",
-    name: "Cream Cap",
-    category: "accessory",
-    color: "cream",
-    originalImageDataUrl: "perfect-closet://placeholder-accessory-cap",
-    cutoutImageDataUrl: "perfect-closet://placeholder-accessory-cap",
-    ...getDefaultPlacementForCategory("accessory"),
-    createdAt,
-    isPlaceholder: true
-  },
-  {
-    id: "placeholder-accessory-scarf",
-    name: "Silk Scarf",
-    category: "accessory",
-    color: "rose",
-    originalImageDataUrl: "perfect-closet://placeholder-accessory-scarf",
-    cutoutImageDataUrl: "perfect-closet://placeholder-accessory-scarf",
-    ...getDefaultPlacementForCategory("accessory"),
     createdAt,
     isPlaceholder: true
   }

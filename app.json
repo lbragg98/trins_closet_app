@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Perfect Closet",
-    "slug": "perfect-closet",
+    "name": "Wardrobe Whimsy",
+    "slug": "wardrobe-whimsy",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -23,7 +23,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Perfect Closet uses your photos so you can add your model and clothing images."
+          "photosPermission": "Wardrobe Whimsy uses your photos so you can add your model and clothing images."
         }
       ]
     ]

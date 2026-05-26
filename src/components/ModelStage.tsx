@@ -13,7 +13,6 @@ type ModelStageProps = {
   shoes?: ClothingItem;
   jacket?: ClothingItem;
   dress?: ClothingItem;
-  accessories?: ClothingItem[];
   previewItem?: ClothingItem;
   children?: ReactNode;
 };
@@ -25,7 +24,6 @@ export function ModelStage({
   shoes,
   jacket,
   dress,
-  accessories = [],
   previewItem,
   children
 }: ModelStageProps) {
@@ -51,9 +49,6 @@ export function ModelStage({
       <ClothingOverlayLayer item={top} />
       <ClothingOverlayLayer item={jacket} />
       <ClothingOverlayLayer item={shoes} />
-      {accessories.map((item) => (
-        <ClothingOverlayLayer key={item.id} item={item} />
-      ))}
       {previewItem && (
         <ClothingOverlayLayer
           item={{

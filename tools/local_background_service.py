@@ -13,7 +13,7 @@ os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 SUPPORTED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
-app = FastAPI(title="Perfect Closet Local Background Removal")
+app = FastAPI(title="Wardrobe Whimsy Local Background Removal")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8081", "http://127.0.0.1:8081"],
