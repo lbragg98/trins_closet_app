@@ -1,4 +1,4 @@
-import { Alert, Image, Pressable, ScrollView, StyleSheet, View, useColorScheme } from "react-native";
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, View, useColorScheme } from "react-native";
 
 import { AppText } from "../components/AppText";
 import { ScreenScaffold } from "../components/ScreenScaffold";
@@ -15,6 +15,15 @@ export function ClosetScreen() {
   const deleteClothingItem = useClosetStore((state) => state.deleteClothingItem);
 
   const confirmDelete = (item: ClothingItem) => {
+    const message = `${item.name} will be removed from this device.`;
+
+    if (Platform.OS === "web") {
+      if (window.confirm(`${message}\n\nDelete this item?`)) {
+        deleteClothingItem(item.id);
+      }
+      return;
+    }
+
     Alert.alert("Delete item?", `${item.name} will be removed from this device.`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteClothingItem(item.id) }
