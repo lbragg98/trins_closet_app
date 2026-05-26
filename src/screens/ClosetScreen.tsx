@@ -1,7 +1,6 @@
 import { Alert, Image, Pressable, ScrollView, StyleSheet, View, useColorScheme } from "react-native";
 
 import { AppText } from "../components/AppText";
-import { PlaceholderVisual } from "../components/PlaceholderVisual";
 import { ScreenScaffold } from "../components/ScreenScaffold";
 import { colors } from "../theme/colors";
 import { sharedStyles } from "../theme/styles";
@@ -46,30 +45,20 @@ export function ClosetScreen() {
                       sharedStyles.card,
                       styles.card,
                       {
-                        backgroundColor: scheme === "dark" ? colors.surfaceDark : colors.surface,
-                        borderColor: scheme === "dark" ? colors.borderDark : colors.border
+                        backgroundColor: "rgba(35, 18, 55, 0.78)",
+                        borderColor: "rgba(255, 183, 240, 0.46)"
                       }
                     ]}
                   >
                     <View style={styles.thumb}>
-                      {item.isPlaceholder ? (
-                        <PlaceholderVisual category={item.category} name={item.name} compact />
-                      ) : (
-                        <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
-                      )}
+                      <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
                     </View>
                     <AppText style={styles.itemName} numberOfLines={1}>
                       {item.name}
                     </AppText>
-                    {item.isPlaceholder ? (
-                      <AppText muted style={styles.meta}>
-                        Placeholder
-                      </AppText>
-                    ) : (
-                      <Pressable onPress={() => confirmDelete(item)} style={styles.deleteButton}>
-                        <AppText style={styles.deleteText}>Delete</AppText>
-                      </Pressable>
-                    )}
+                    <Pressable onPress={() => confirmDelete(item)} style={styles.deleteButton}>
+                      <AppText style={styles.deleteText}>Delete</AppText>
+                    </Pressable>
                   </View>
                 ))}
               </View>
@@ -103,7 +92,11 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "47%",
-    minHeight: 178
+    minHeight: 178,
+    shadowColor: colors.neonPink,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12
   },
   thumb: {
     height: 96
@@ -114,11 +107,8 @@ const styles = StyleSheet.create({
   },
   itemName: {
     marginTop: 10,
-    fontWeight: "800"
-  },
-  meta: {
-    marginTop: 6,
-    fontSize: 12
+    color: colors.text,
+    fontWeight: "900"
   },
   deleteButton: {
     marginTop: 8

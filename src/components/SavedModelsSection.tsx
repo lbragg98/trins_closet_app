@@ -46,8 +46,8 @@ export function SavedModelsSection({ models, activeModelId, onUseModel, onDelete
         sharedStyles.card,
         styles.section,
         {
-          backgroundColor: isDark ? colors.surfaceDark : colors.surface,
-          borderColor: isDark ? colors.borderDark : colors.border
+          backgroundColor: "rgba(35, 18, 55, 0.78)",
+          borderColor: "rgba(255, 183, 240, 0.46)"
         }
       ]}
     >
@@ -76,8 +76,8 @@ export function SavedModelsSection({ models, activeModelId, onUseModel, onDelete
                 style={[
                   styles.card,
                   {
-                    borderColor: isActive ? colors.accentSoft : isDark ? colors.borderDark : colors.border,
-                    backgroundColor: isDark ? colors.surfaceMutedDark : colors.veilLight
+                    borderColor: isActive ? colors.accentSoft : "rgba(255, 183, 240, 0.42)",
+                    backgroundColor: "rgba(48, 24, 76, 0.82)"
                   }
                 ]}
               >
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     gap: 10,
-    shadowColor: colors.text,
+    shadowColor: colors.neonPink,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 18
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     height: 132,
     borderRadius: 8,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.72)"
+    backgroundColor: "rgba(255,255,255,0.82)"
   },
   image: {
     width: "100%",
@@ -165,9 +165,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: colors.accentSoft
+    backgroundColor: colors.neonPink
   },
   badgeText: {
+    color: colors.text,
     fontSize: 10,
     fontWeight: "900"
   },

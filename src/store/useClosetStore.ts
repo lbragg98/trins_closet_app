@@ -1,6 +1,5 @@
 import { create } from "zustand";
 
-import { placeholderClothingItems } from "../data/placeholders";
 import * as localClosetStorage from "../services/localClosetStorage";
 import { ClothingCategory, ClothingItem, Outfit, SavedModel } from "../types/closet";
 import { getDefaultPlacementForCategory, legacyPlacementToNormalized } from "../utils/placement";
@@ -33,14 +32,6 @@ type ClosetState = StoredClosetState & {
   hydrateFromStorage: () => Promise<void>;
 };
 
-const defaultSelection = {
-  selectedTopId: "placeholder-top-tee",
-  selectedBottomId: "placeholder-bottom-jeans",
-  selectedShoesId: "placeholder-shoes-sneakers",
-  selectedJacketId: undefined,
-  selectedDressId: undefined
-};
-
 const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => {
   if (!isSupportedCategory(item.category)) return undefined;
 
@@ -70,13 +61,11 @@ const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => 
   };
 };
 
-const ensurePlaceholders = (items: ClothingItem[]) => {
-  const savedItems = items
-    .filter((item) => !item.isPlaceholder)
+const normalizeSavedClothingItems = (items: ClothingItem[]) =>
+  items
+    .filter((item) => !(item as ClothingItem & { isPlaceholder?: boolean }).isPlaceholder)
     .map(normalizeClothingItem)
     .filter((item): item is ClothingItem => item !== undefined);
-  return [...placeholderClothingItems, ...savedItems];
-};
 
 const isSupportedCategory = (category: string): category is ClothingCategory =>
   category === "top" || category === "bottom" || category === "shoes" || category === "jacket" || category === "dress";
@@ -93,14 +82,14 @@ const getSelectedKey = (category: ClothingCategory) => {
 };
 
 export const useClosetStore = create<ClosetState>((set, get) => ({
-  clothingItems: placeholderClothingItems,
+  clothingItems: [],
   outfits: [],
   models: [],
-  selectedTopId: defaultSelection.selectedTopId,
-  selectedBottomId: defaultSelection.selectedBottomId,
-  selectedShoesId: defaultSelection.selectedShoesId,
-  selectedJacketId: defaultSelection.selectedJacketId,
-  selectedDressId: defaultSelection.selectedDressId,
+  selectedTopId: undefined,
+  selectedBottomId: undefined,
+  selectedShoesId: undefined,
+  selectedJacketId: undefined,
+  selectedDressId: undefined,
   customModelUri: undefined,
   activeModelId: undefined,
   isHydrated: false,
@@ -126,7 +115,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
 
   deleteClothingItem: (id) => {
     const item = get().clothingItems.find((entry) => entry.id === id);
-    if (!item || item.isPlaceholder) return;
+    if (!item) return;
 
     set((state) => {
       const clothingItems = state.clothingItems.filter((entry) => entry.id !== id);
@@ -309,7 +298,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         localClosetStorage.getActiveModel(),
         localClosetStorage.getCustomModelUri()
       ]);
-      const clothingItems = ensurePlaceholders(savedClothingItems);
+      const clothingItems = normalizeSavedClothingItems(savedClothingItems);
       let normalizedModels = models;
       let normalizedActiveModel = activeModel;
 
@@ -338,11 +327,11 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         clothingItems,
         outfits,
         models: normalizedModels,
-        selectedTopId: defaultSelection.selectedTopId,
-        selectedBottomId: defaultSelection.selectedBottomId,
-        selectedShoesId: defaultSelection.selectedShoesId,
-        selectedJacketId: defaultSelection.selectedJacketId,
-        selectedDressId: defaultSelection.selectedDressId,
+        selectedTopId: clothingItems.find((item) => item.category === "top")?.id,
+        selectedBottomId: clothingItems.find((item) => item.category === "bottom")?.id,
+        selectedShoesId: clothingItems.find((item) => item.category === "shoes")?.id,
+        selectedJacketId: clothingItems.find((item) => item.category === "jacket")?.id,
+        selectedDressId: clothingItems.find((item) => item.category === "dress")?.id,
         activeModelId: normalizedActiveModel?.id,
         customModelUri: normalizedActiveModel?.imageDataUrl,
         isHydrated: true

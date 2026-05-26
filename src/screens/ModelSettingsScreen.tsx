@@ -2,7 +2,6 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, TextInput, View, useCo
 import { useState } from "react";
 
 import { AppText } from "../components/AppText";
-import { PlaceholderVisual } from "../components/PlaceholderVisual";
 import { PrimaryButton, buttonRowStyles } from "../components/PrimaryButton";
 import { SavedModelsSection } from "../components/SavedModelsSection";
 import { ScreenScaffold } from "../components/ScreenScaffold";
@@ -108,15 +107,20 @@ export function ModelSettingsScreen() {
           style={[
             styles.modelPreview,
             {
-              backgroundColor: isDark ? colors.surfaceDark : colors.surface,
-              borderColor: isDark ? colors.borderDark : colors.border
+              backgroundColor: "rgba(35, 18, 55, 0.76)",
+              borderColor: "rgba(255, 183, 240, 0.58)"
             }
           ]}
         >
           {previewUri ? (
             <Image source={{ uri: previewUri }} resizeMode="contain" style={styles.image} />
           ) : (
-            <PlaceholderVisual category="model" />
+            <View style={styles.emptyPreview}>
+              <AppText style={styles.emptyTitle}>No model added</AppText>
+              <AppText muted style={styles.emptyCopy}>
+                Upload a model photo to start building outfits.
+              </AppText>
+            </View>
           )}
         </View>
 
@@ -137,8 +141,6 @@ export function ModelSettingsScreen() {
             <TextInput
               value={draftModelName}
               onChangeText={setDraftModelName}
-              placeholder={`Model ${models.length + 1}`}
-              placeholderTextColor="#5F4D72"
               style={[
                 sharedStyles.input,
                 {
@@ -155,8 +157,8 @@ export function ModelSettingsScreen() {
               style={[
                 styles.useNowToggle,
                 {
-                  borderColor: useNow ? colors.accentSoft : isDark ? colors.borderDark : colors.border,
-                  backgroundColor: useNow ? "rgba(242, 201, 76, 0.26)" : isDark ? colors.surfaceDark : colors.surface
+                  borderColor: useNow ? colors.accentSoft : "rgba(255, 183, 240, 0.58)",
+                  backgroundColor: useNow ? "rgba(255, 79, 216, 0.24)" : "rgba(35, 18, 55, 0.76)"
                 }
               ]}
             >
@@ -186,7 +188,7 @@ export function ModelSettingsScreen() {
             style={[
               styles.statusText,
               status === "error" && { color: colors.danger },
-              status === "success" && { color: isDark ? colors.accentSoft : colors.text }
+              status === "success" && { color: colors.accentSoft }
             ]}
           >
             {statusMessage}
@@ -204,8 +206,8 @@ export function ModelSettingsScreen() {
           style={[
             sharedStyles.card,
             {
-              backgroundColor: isDark ? colors.surfaceDark : colors.surface,
-              borderColor: isDark ? colors.borderDark : colors.border
+              backgroundColor: "rgba(35, 18, 55, 0.78)",
+              borderColor: "rgba(255, 183, 240, 0.46)"
             }
           ]}
         >
@@ -249,6 +251,23 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%"
   },
+  emptyPreview: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  emptyCopy: {
+    marginTop: 8,
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center"
+  },
   savedCount: {
     marginTop: 4
   },
@@ -264,6 +283,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12
   },
   useNowText: {
+    color: colors.text,
     fontWeight: "900"
   },
   statusText: {

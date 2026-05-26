@@ -6,7 +6,6 @@ import { colors } from "../theme/colors";
 import { ClothingCategory, ClothingPlacement, ClothingTransform } from "../types/closet";
 import { normalizedPlacementToLegacy, placementFramesByCategory } from "../utils/placement";
 import { AppText } from "./AppText";
-import { PlaceholderVisual } from "./PlaceholderVisual";
 
 type ClothingTransformEditorProps = {
   modelImageUrl?: string;
@@ -152,7 +151,9 @@ export function ClothingTransformEditor({
           {modelImageUrl ? (
             <Image source={{ uri: modelImageUrl }} resizeMode="contain" style={styles.modelImage as ImageStyle} />
           ) : (
-            <PlaceholderVisual category="model" />
+            <View style={styles.emptyModel}>
+              <AppText style={styles.emptyTitle}>No model added</AppText>
+            </View>
           )}
 
           <motion.div
@@ -370,6 +371,19 @@ const styles = StyleSheet.create({
   modelImage: {
     width: "100%",
     height: "100%"
+  },
+  emptyModel: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "900",
+    textAlign: "center"
   },
   toolbar: {
     gap: 10

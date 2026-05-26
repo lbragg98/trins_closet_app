@@ -22,16 +22,20 @@ export function PrimaryButton({ title, variant = "filled", style, disabled, ...p
       style={({ pressed }) => [
         isGhost ? sharedStyles.ghostButton : sharedStyles.button,
         {
-          backgroundColor: isGhost ? "transparent" : isDanger ? colors.danger : colors.accent,
-          borderColor: scheme === "dark" ? colors.borderDark : colors.border,
-          opacity: disabled ? 0.45 : pressed ? 0.82 : 1
+          backgroundColor: isGhost ? "rgba(35, 18, 55, 0.54)" : isDanger ? colors.danger : colors.accent,
+          borderColor: isGhost ? "rgba(255, 183, 240, 0.66)" : colors.neonPinkSoft,
+          shadowColor: isDanger ? colors.danger : colors.neonPink,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: disabled ? 0 : isGhost ? 0.28 : 0.48,
+          shadowRadius: isGhost ? 10 : 18,
+          opacity: disabled ? 0.45 : pressed ? 0.86 : 1
         },
         style as object
       ]}
     >
       {!isGhost && !isDanger ? (
         <LinearGradient
-          colors={[colors.accentDeep, colors.accent, colors.rose]}
+          colors={[colors.accentDeep, colors.accent, colors.neonPink]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.fill}

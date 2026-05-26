@@ -75,18 +75,18 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(242, 201, 76, 0.62)",
-    backgroundColor: "rgba(36, 18, 54, 0.68)",
+    borderColor: "rgba(255, 183, 240, 0.82)",
+    backgroundColor: "rgba(45, 18, 72, 0.82)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.accent,
+    shadowColor: colors.neonPink,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.42,
-    shadowRadius: 18
+    shadowOpacity: 0.66,
+    shadowRadius: 22
   },
   activeOrb: {
     borderColor: colors.accentSoft,
-    backgroundColor: "rgba(90, 42, 131, 0.84)"
+    backgroundColor: "rgba(123, 44, 191, 0.92)"
   },
   pressedOrb: {
     opacity: 0.82
@@ -96,20 +96,26 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 999,
-    backgroundColor: "rgba(155, 93, 229, 0.3)"
+    backgroundColor: "rgba(255, 79, 216, 0.28)"
   },
   activeInnerGlow: {
-    backgroundColor: "rgba(242, 201, 76, 0.34)"
+    backgroundColor: "rgba(255, 232, 163, 0.34)"
   },
   initial: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: "900"
+    fontWeight: "900",
+    textShadowColor: colors.neonPink,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8
   },
   label: {
     marginTop: 2,
     color: colors.text,
     fontSize: 10,
-    fontWeight: "900"
+    fontWeight: "900",
+    textShadowColor: colors.neonPink,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8
   }
 });

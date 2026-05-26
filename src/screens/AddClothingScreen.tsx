@@ -226,8 +226,8 @@ export function AddClothingScreen() {
             style={[
               styles.imagePicker,
               {
-                backgroundColor: isDark ? colors.surfaceDark : colors.surface,
-                borderColor: isDark ? colors.borderDark : colors.border
+                backgroundColor: "rgba(35, 18, 55, 0.76)",
+                borderColor: "rgba(255, 183, 240, 0.58)"
               }
             ]}
           >
@@ -246,8 +246,8 @@ export function AddClothingScreen() {
             style={[
               styles.imagePicker,
               {
-                backgroundColor: isDark ? colors.surfaceDark : colors.surface,
-                borderColor: cutoutImageDataUrl ? colors.accentSoft : isDark ? colors.borderDark : colors.border
+                backgroundColor: "rgba(35, 18, 55, 0.76)",
+                borderColor: cutoutImageDataUrl ? colors.accentSoft : "rgba(255, 183, 240, 0.58)"
               }
             ]}
           >
@@ -275,7 +275,7 @@ export function AddClothingScreen() {
               style={[
                 styles.statusText,
                 status === "error" && { color: colors.danger },
-                status === "success" && { color: isDark ? colors.accentSoft : colors.accentDeep }
+                status === "success" && { color: colors.accentSoft }
               ]}
             >
               {statusMessage}
@@ -288,8 +288,6 @@ export function AddClothingScreen() {
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Black tank, linen pants..."
-            placeholderTextColor="#5F4D72"
             style={[
               sharedStyles.input,
               {
@@ -306,8 +304,6 @@ export function AddClothingScreen() {
           <TextInput
             value={color}
             onChangeText={setColor}
-            placeholder="Optional"
-            placeholderTextColor="#5F4D72"
             style={[
               sharedStyles.input,
               {
@@ -335,8 +331,8 @@ export function AddClothingScreen() {
                   style={[
                     styles.categoryPill,
                     {
-                      backgroundColor: selected ? colors.accent : isDark ? colors.surfaceDark : colors.surface,
-                      borderColor: selected ? colors.accent : isDark ? colors.borderDark : colors.border
+                      backgroundColor: selected ? "rgba(123, 44, 191, 0.92)" : "rgba(35, 18, 55, 0.76)",
+                      borderColor: selected ? colors.neonPinkSoft : "rgba(255, 183, 240, 0.58)"
                     }
                   ]}
                 >
@@ -443,10 +439,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14
   },
   categoryText: {
-    fontWeight: "800"
+    color: colors.text,
+    fontWeight: "900"
   },
   selectedCategoryText: {
-    color: colors.text
+    color: colors.accentSoft
   }
 });
 

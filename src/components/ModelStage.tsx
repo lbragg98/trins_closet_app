@@ -3,8 +3,8 @@ import { Image, StyleSheet, View } from "react-native";
 
 import { colors } from "../theme/colors";
 import { ClothingItem } from "../types/closet";
+import { AppText } from "./AppText";
 import { ClothingOverlayLayer } from "./ClothingOverlayLayer";
-import { PlaceholderVisual } from "./PlaceholderVisual";
 
 type ModelStageProps = {
   modelUri?: string;
@@ -42,7 +42,12 @@ export function ModelStage({
       {modelUri ? (
         <Image source={{ uri: modelUri }} resizeMode="contain" style={styles.modelImage} />
       ) : (
-        <PlaceholderVisual category="model" />
+        <View style={styles.emptyModel}>
+          <AppText style={styles.emptyTitle}>No model added</AppText>
+          <AppText muted style={styles.emptyCopy}>
+            Add a model photo in the Model tab.
+          </AppText>
+        </View>
       )}
       <ClothingOverlayLayer item={bottom} />
       <ClothingOverlayLayer item={dress} />
@@ -96,5 +101,24 @@ const styles = StyleSheet.create({
   modelImage: {
     width: "100%",
     height: "100%"
+  },
+  emptyModel: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  emptyCopy: {
+    marginTop: 8,
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center"
   }
 });

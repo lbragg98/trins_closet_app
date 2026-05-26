@@ -50,18 +50,29 @@ export default function App() {
           initialRouteName="Builder"
           screenOptions={{
             headerShown: false,
-            tabBarActiveTintColor: colors.text,
-            tabBarInactiveTintColor: colors.muted,
+            tabBarActiveTintColor: colors.neonPinkSoft,
+            tabBarInactiveTintColor: colors.text,
             tabBarIcon: () => null,
             tabBarIconStyle: { display: "none" },
-            tabBarLabelStyle: { fontSize: 12, fontWeight: "800" },
+            tabBarLabelStyle: {
+              fontSize: 13,
+              fontWeight: "900",
+              textShadowColor: colors.neonPink,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 10
+            },
             tabBarStyle: {
-              borderTopWidth: 0,
+              borderTopWidth: 1,
+              borderTopColor: "rgba(255, 183, 240, 0.32)",
               elevation: 0,
-              backgroundColor: scheme === "dark" ? colors.surfaceDark : colors.surface,
+              backgroundColor: "rgba(22, 8, 38, 0.9)",
               height: 64,
               paddingBottom: 10,
-              paddingTop: 8
+              paddingTop: 8,
+              shadowColor: colors.neonPink,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.42,
+              shadowRadius: 18
             }
           }}
         >

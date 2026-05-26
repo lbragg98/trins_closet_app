@@ -7,7 +7,6 @@ import { ClothingItem } from "../types/closet";
 import { getDisplayCutoutUri } from "../utils/clothingImage";
 import { AppText } from "./AppText";
 import { OrbCategory } from "./CategoryOrbs";
-import { PlaceholderVisual } from "./PlaceholderVisual";
 
 type ClothingCarouselProps = {
   activeCategory: OrbCategory;
@@ -107,7 +106,7 @@ export function ClothingCarousel({
   if (items.length === 0) {
     return (
       <View pointerEvents="box-none" style={styles.emptyWrap}>
-        <View style={[styles.emptyMessage, { backgroundColor: scheme === "dark" ? colors.surfaceDark : colors.surface }]}>
+        <View style={[styles.emptyMessage, { backgroundColor: "rgba(35, 18, 55, 0.84)" }]}>
           <AppText style={styles.emptyTitle}>No {activeCategory}s added yet</AppText>
           <AppText muted style={styles.emptySubtitle}>
             Add clothing to use this category
@@ -196,16 +195,12 @@ export function ClothingCarousel({
                   styles.card,
                   {
                     borderColor: isCentered ? colors.accentSoft : isSelected ? colors.accent : "rgba(255,255,255,0.24)",
-                    backgroundColor: scheme === "dark" ? "rgba(33,20,49,0.82)" : "rgba(255,249,255,0.86)"
+                    backgroundColor: "rgba(35,18,55,0.88)"
                   }
                 ]}
               >
                 <View style={styles.imageWrap}>
-                  {item.isPlaceholder ? (
-                    <PlaceholderVisual category={item.category} name={item.name} compact />
-                  ) : (
-                    <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
-                  )}
+                  <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
                 </View>
                 <AppText style={styles.itemName} numberOfLines={1}>
                   {item.name}
@@ -256,13 +251,14 @@ const styles = StyleSheet.create({
   },
   itemName: {
     marginTop: 8,
+    color: colors.text,
     fontSize: 12,
     fontWeight: "900",
     textAlign: "center"
   },
   selectedText: {
     marginTop: 2,
-    color: colors.accentSoft,
+    color: colors.neonPinkSoft,
     fontSize: 10,
     fontWeight: "900"
   },

@@ -17,7 +17,7 @@ export function AppText({ style, muted, ...props }: AppTextProps) {
           color: muted
             ? scheme === "dark"
               ? colors.mutedDark
-              : colors.muted
+              : colors.neonPinkSoft
             : scheme === "dark"
               ? colors.textDark
               : colors.text,

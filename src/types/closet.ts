@@ -43,7 +43,6 @@ export type ClothingItem = {
   transform?: ClothingTransform;
   createdAt: string;
   updatedAt?: string;
-  isPlaceholder?: boolean;
 };
 
 export type Outfit = {

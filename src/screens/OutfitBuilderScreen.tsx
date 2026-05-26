@@ -12,7 +12,9 @@ import { useClosetStore } from "../store/useClosetStore";
 import { ClothingItem } from "../types/closet";
 
 export function OutfitBuilderScreen() {
-  const [activeCategory, setActiveCategory] = useState<OrbCategory | null>(null);
+  const [activeCategory, setActiveCategory] = useState<OrbCategory | null>(
+    null,
+  );
   const [previewItem, setPreviewItem] = useState<ClothingItem | undefined>();
   const {
     clothingItems,
@@ -23,7 +25,7 @@ export function OutfitBuilderScreen() {
     selectedDressId,
     customModelUri,
     saveOutfit,
-    setSelectedItem
+    setSelectedItem,
   } = useClosetStore();
 
   const top = clothingItems.find((item) => item.id === selectedTopId);
@@ -35,7 +37,7 @@ export function OutfitBuilderScreen() {
   const selectedByCategory: Record<OrbCategory, string | undefined> = {
     top: selectedTopId,
     bottom: selectedBottomId,
-    shoes: selectedShoesId
+    shoes: selectedShoesId,
   };
 
   const handleSave = () => {
@@ -57,16 +59,18 @@ export function OutfitBuilderScreen() {
     setActiveCategory(null);
   };
 
-  const activeItems = activeCategory ? clothingItems.filter((item) => item.category === activeCategory) : [];
+  const activeItems = activeCategory
+    ? clothingItems.filter((item) => item.category === activeCategory)
+    : [];
 
   return (
     <ScreenScaffold>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.header}>
           <AppText style={sharedStyles.title}>Wardrobe Whimsy</AppText>
-          <AppText muted style={styles.subtitle}>
-            A moonlit fitting room for favorite pieces.
-          </AppText>
         </View>
 
         <ModelStage
@@ -78,7 +82,10 @@ export function OutfitBuilderScreen() {
           dress={dress}
           previewItem={previewItem}
         >
-          <CategoryOrbs activeCategory={activeCategory} onCategorySelect={handleCategorySelect} />
+          <CategoryOrbs
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+          />
           {activeCategory && (
             <ClothingCarousel
               activeCategory={activeCategory}
@@ -99,13 +106,13 @@ export function OutfitBuilderScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: 18,
-    paddingBottom: 24
+    paddingBottom: 24,
   },
   header: {
-    paddingTop: 8
+    paddingTop: 8,
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 15
+    fontSize: 15,
   },
 });

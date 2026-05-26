@@ -11,18 +11,26 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "900",
     letterSpacing: 0,
-    color: "#FBF6FF"
+    color: colors.text,
+    textShadowColor: "rgba(255, 79, 216, 0.72)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
-    letterSpacing: 0
+    letterSpacing: 0,
+    color: colors.text,
+    textShadowColor: "rgba(123, 44, 191, 0.6)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8
   },
   label: {
     fontSize: 13,
     fontWeight: "800",
     textTransform: "uppercase",
-    letterSpacing: 0
+    letterSpacing: 0,
+    color: colors.neonPinkSoft
   },
   input: {
     minHeight: 48,
@@ -39,9 +47,12 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: "center"
   },
   buttonText: {
-    color: colors.text,
+    color: "#FFF9FF",
     fontSize: 15,
-    fontWeight: "900"
+    fontWeight: "900",
+    textShadowColor: "rgba(255, 79, 216, 0.72)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8
   },
   ghostButton: {
     minHeight: 42,
@@ -53,7 +64,8 @@ export const sharedStyles = StyleSheet.create({
   },
   ghostButtonText: {
     fontSize: 14,
-    fontWeight: "800"
+    fontWeight: "800",
+    color: colors.text
   },
   card: {
     borderRadius: 8,

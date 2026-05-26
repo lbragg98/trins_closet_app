@@ -7,7 +7,6 @@ import {
   normalizedPlacementToLegacy,
   placementFramesByCategory
 } from "../utils/placement";
-import { PlaceholderVisual } from "./PlaceholderVisual";
 
 type ClothingOverlayLayerProps = {
   item?: ClothingItem;
@@ -40,11 +39,7 @@ export function ClothingOverlayLayer({ item }: ClothingOverlayLayerProps) {
         }
       ]}
     >
-      {item.isPlaceholder ? (
-        <PlaceholderVisual category={item.category} name={item.name} compact />
-      ) : (
-        <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image as ImageStyle} />
-      )}
+      <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image as ImageStyle} />
     </View>
   );
 }

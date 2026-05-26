@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     zIndex: 1,
-    backgroundColor: "rgba(16, 8, 31, 0.22)"
+    backgroundColor: "rgba(16, 8, 31, 0.34)"
   },
   content: {
     zIndex: 50
