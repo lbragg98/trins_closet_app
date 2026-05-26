@@ -1,7 +1,8 @@
 import { Platform } from "react-native";
 
 const CONFIGURED_BACKGROUND_REMOVAL_URL =
-  process.env.EXPO_PUBLIC_BACKGROUND_REMOVAL_URL ?? process.env.EXPO_PUBLIC_LOCAL_BG_REMOVAL_URL;
+  (process.env as Record<string, string | undefined>)["EXPO_PUBLIC_BACKGROUND_REMOVAL_URL"] ??
+  (process.env as Record<string, string | undefined>)["EXPO_PUBLIC_LOCAL_BG_REMOVAL_URL"];
 
 const LOCAL_BACKGROUND_REMOVAL_URL = CONFIGURED_BACKGROUND_REMOVAL_URL ?? "http://localhost:8765/remove-background";
 
