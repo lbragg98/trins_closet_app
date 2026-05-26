@@ -124,14 +124,14 @@ export function AddClothingScreen() {
     }
 
     setStatus("loading");
-    setStatusMessage("Removing background locally. The first run may take a little while.");
+    setStatusMessage("Removing background in your browser. The first run may take a little while.");
 
     try {
-      const result = await removeBackgroundLocally(originalImageDataUrl);
+      const result = await removeBackgroundLocally(originalImageDataUrl, setStatusMessage);
       await prepareCutout(result.dataUrl, "Background removed, trimmed, and auto-placed.");
     } catch (error) {
       setStatus("error");
-      setStatusMessage(error instanceof Error ? error.message : "Local background removal failed.");
+      setStatusMessage(error instanceof Error ? error.message : "Browser background removal failed.");
     }
   };
 
