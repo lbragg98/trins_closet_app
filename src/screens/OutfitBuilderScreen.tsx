@@ -9,35 +9,33 @@ import { PrimaryButton } from "../components/PrimaryButton";
 import { ScreenScaffold } from "../components/ScreenScaffold";
 import { sharedStyles } from "../theme/styles";
 import { useClosetStore } from "../store/useClosetStore";
-import { ClothingItem } from "../types/closet";
+import { ClothingCategory, ClothingItem } from "../types/closet";
+
+type PreviewSelection = {
+  category: ClothingCategory;
+  itemId: string | null;
+};
 
 export function OutfitBuilderScreen() {
   const [activeCategory, setActiveCategory] = useState<OrbCategory | null>(
     null,
   );
-  const [previewItem, setPreviewItem] = useState<ClothingItem | undefined>();
+  const [previewItem, setPreviewItem] = useState<PreviewSelection | undefined>();
   const {
     clothingItems,
-    selectedTopId,
-    selectedBottomId,
-    selectedShoesId,
-    selectedJacketId,
-    selectedDressId,
+    selectedItems,
     customModelUri,
     saveOutfit,
     setSelectedItem,
   } = useClosetStore();
 
-  const top = clothingItems.find((item) => item.id === selectedTopId);
-  const bottom = clothingItems.find((item) => item.id === selectedBottomId);
-  const shoes = clothingItems.find((item) => item.id === selectedShoesId);
-  const jacket = clothingItems.find((item) => item.id === selectedJacketId);
-  const dress = clothingItems.find((item) => item.id === selectedDressId);
+  const getRenderedItem = (category: ClothingCategory) => {
+    if (previewItem?.category === category) {
+      return previewItem.itemId ? clothingItems.find((item) => item.id === previewItem.itemId) : undefined;
+    }
 
-  const selectedByCategory: Record<OrbCategory, string | undefined> = {
-    top: selectedTopId,
-    bottom: selectedBottomId,
-    shoes: selectedShoesId,
+    const selectedId = selectedItems[category];
+    return selectedId ? clothingItems.find((item) => item.id === selectedId) : undefined;
   };
 
   const handleSave = () => {
@@ -55,7 +53,7 @@ export function OutfitBuilderScreen() {
 
   const handleConfirmItem = (item?: ClothingItem) => {
     if (!item && activeCategory) {
-      setSelectedItem(activeCategory, undefined);
+      setSelectedItem(activeCategory, null);
     } else if (item) {
       setSelectedItem(item.category, item.id);
     }
@@ -80,12 +78,11 @@ export function OutfitBuilderScreen() {
 
         <ModelStage
           modelUri={customModelUri}
-          top={top}
-          bottom={bottom}
-          shoes={shoes}
-          jacket={jacket}
-          dress={dress}
-          previewItem={previewItem}
+          tops={getRenderedItem("tops")}
+          bottoms={getRenderedItem("bottoms")}
+          shoes={getRenderedItem("shoes")}
+          dress={getRenderedItem("dress")}
+          jacket={getRenderedItem("jacket")}
         >
           <CategoryOrbs
             activeCategory={activeCategory}
@@ -95,8 +92,13 @@ export function OutfitBuilderScreen() {
             <ClothingCarousel
               activeCategory={activeCategory}
               items={activeItems}
-              selectedItemId={selectedByCategory[activeCategory]}
-              onPreviewChange={setPreviewItem}
+              selectedItemId={selectedItems[activeCategory] ?? undefined}
+              onPreviewChange={(item) => {
+                setPreviewItem({
+                  category: activeCategory,
+                  itemId: item?.id ?? null
+                });
+              }}
               onConfirmItem={handleConfirmItem}
             />
           )}

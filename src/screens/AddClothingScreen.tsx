@@ -1,6 +1,8 @@
 import { Alert, Image, Pressable, ScrollView, StyleSheet, TextInput, View, useColorScheme } from "react-native";
-import { useState } from "react";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { useEffect, useState } from "react";
 
+import type { RootTabParamList } from "../../App";
 import { AppText } from "../components/AppText";
 import { ClothingTransformEditor } from "../components/ClothingTransformEditor";
 import { PrimaryButton } from "../components/PrimaryButton";
@@ -12,32 +14,49 @@ import { useClosetStore } from "../store/useClosetStore";
 import { ClothingCategory, ClothingPlacement, ClothingTransform } from "../types/closet";
 import { categories, categoryLabels } from "../utils/categories";
 import { pickImageFromLibrary } from "../utils/imagePicker";
-import {
-  defaultPlacementByCategory,
-  getSuggestedPlacementForCategory,
-  ImageDimensions,
-  normalizedPlacementToLegacy
-} from "../utils/placement";
+import { getSuggestedPlacementForCategory, ImageDimensions, normalizedPlacementToLegacy } from "../utils/placement";
 import { getImageDimensions, trimTransparentPixels } from "../utils/transparentTrim";
 import { exportTransformedCutout, hasVisibleTransform } from "../utils/transformExport";
 
 export function AddClothingScreen() {
+  const route = useRoute<RouteProp<RootTabParamList, "Add">>();
+  const navigation = useNavigation();
   const scheme = useColorScheme();
   const addClothingItem = useClosetStore((state) => state.addClothingItem);
+  const updateClothingItem = useClosetStore((state) => state.updateClothingItem);
+  const clothingItems = useClosetStore((state) => state.clothingItems);
   const customModelUri = useClosetStore((state) => state.customModelUri);
+  const editItemId = route.params?.editItemId;
+  const editingItem = editItemId ? clothingItems.find((item) => item.id === editItemId) : undefined;
   const [originalImageDataUrl, setOriginalImageDataUrl] = useState<string>();
   const [cutoutImageDataUrl, setCutoutImageDataUrl] = useState<string>();
   const [transformedCutoutDataUrl, setTransformedCutoutDataUrl] = useState<string>();
   const [cutoutImageDimensions, setCutoutImageDimensions] = useState<ImageDimensions>();
   const [name, setName] = useState("");
   const [color, setColor] = useState("");
-  const [category, setCategory] = useState<ClothingCategory>("top");
-  const [placement, setPlacement] = useState<ClothingPlacement>(getSuggestedPlacementForCategory("top"));
+  const [category, setCategory] = useState<ClothingCategory>("tops");
+  const [placement, setPlacement] = useState<ClothingPlacement>(getSuggestedPlacementForCategory("tops"));
   const [transform, setTransform] = useState<ClothingTransform>(getEmptyTransform());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [statusMessage, setStatusMessage] = useState("");
 
   const isDark = scheme === "dark";
+  const isEditing = !!editItemId;
+
+  useEffect(() => {
+    if (!editingItem) return;
+
+    setName(editingItem.name);
+    setColor(editingItem.color ?? "");
+    setCategory(editingItem.category);
+    setOriginalImageDataUrl(editingItem.originalImageDataUrl);
+    setCutoutImageDataUrl(editingItem.cutoutImageDataUrl);
+    setTransformedCutoutDataUrl(editingItem.transformedCutoutDataUrl);
+    setPlacement(editingItem.placement ?? getSuggestedPlacementForCategory(editingItem.category));
+    setTransform(editingItem.transform ?? getEmptyTransform());
+    setStatus("idle");
+    setStatusMessage("");
+  }, [editingItem?.id]);
 
   const resetPlacement = (nextCategory = category) => {
     setPlacement(getSuggestedPlacementForCategory(nextCategory));
@@ -179,7 +198,7 @@ export function AddClothingScreen() {
     }
 
     const legacyPlacement = normalizedPlacementToLegacy(category, placement);
-    addClothingItem({
+    const itemUpdates = {
       name: trimmedName,
       color: color.trim() || undefined,
       category,
@@ -194,7 +213,21 @@ export function AddClothingScreen() {
       placement,
       transform,
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    if (editingItem) {
+      updateClothingItem(editingItem.id, itemUpdates);
+      setStatus("success");
+      setStatusMessage("Clothing item updated locally.");
+      Alert.alert("Updated", `${trimmedName} was saved.`);
+      (navigation as { navigate: (screen: string) => void; setParams: (params: RootTabParamList["Add"]) => void }).setParams({
+        editItemId: undefined
+      });
+      (navigation as { navigate: (screen: string) => void }).navigate("Closet");
+      return;
+    }
+
+    addClothingItem(itemUpdates);
 
     setName("");
     setColor("");
@@ -202,8 +235,8 @@ export function AddClothingScreen() {
     setCutoutImageDataUrl(undefined);
     setTransformedCutoutDataUrl(undefined);
     setCutoutImageDimensions(undefined);
-    setCategory("top");
-    setPlacement(getSuggestedPlacementForCategory("top"));
+    setCategory("tops");
+    setPlacement(getSuggestedPlacementForCategory("tops"));
     setTransform(getEmptyTransform());
     setStatus("success");
     setStatusMessage("Clothing item saved locally.");
@@ -214,9 +247,9 @@ export function AddClothingScreen() {
     <ScreenScaffold>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <AppText style={sharedStyles.title}>Add Clothing</AppText>
+          <AppText style={sharedStyles.title}>{isEditing ? "Edit Clothing" : "Add Clothing"}</AppText>
           <AppText muted style={styles.subtitle}>
-            Add another piece to the collection.
+            {isEditing ? "Update this piece without re-uploading the image." : "Add another piece to the collection."}
           </AppText>
         </View>
 
@@ -235,9 +268,7 @@ export function AddClothingScreen() {
             {originalImageDataUrl ? (
               <Image source={{ uri: originalImageDataUrl }} resizeMode="contain" style={styles.previewImage} />
             ) : (
-              <AppText muted style={styles.pickerText}>
-                Choose Photo
-              </AppText>
+              <AppText muted style={styles.pickerText}>Choose Photo</AppText>
             )}
           </Pressable>
 
@@ -326,7 +357,6 @@ export function AddClothingScreen() {
                   onPress={() => {
                     setCategory(entry);
                     setPlacement(getSuggestedPlacementForCategory(entry));
-                    resetTransform();
                   }}
                   style={[
                     styles.categoryPill,
@@ -366,7 +396,7 @@ export function AddClothingScreen() {
           </View>
         )}
 
-        <PrimaryButton title="Save Clothing Item" onPress={save} disabled={!cutoutImageDataUrl} />
+        <PrimaryButton title={isEditing ? "Save Changes" : "Save Clothing Item"} onPress={save} disabled={!cutoutImageDataUrl} />
       </ScrollView>
     </ScreenScaffold>
   );

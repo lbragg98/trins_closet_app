@@ -8,23 +8,21 @@ import { ClothingOverlayLayer } from "./ClothingOverlayLayer";
 
 type ModelStageProps = {
   modelUri?: string;
-  top?: ClothingItem;
-  bottom?: ClothingItem;
+  tops?: ClothingItem;
+  bottoms?: ClothingItem;
   shoes?: ClothingItem;
   jacket?: ClothingItem;
   dress?: ClothingItem;
-  previewItem?: ClothingItem;
   children?: ReactNode;
 };
 
 export function ModelStage({
   modelUri,
-  top,
-  bottom,
+  tops,
+  bottoms,
   shoes,
   jacket,
   dress,
-  previewItem,
   children
 }: ModelStageProps) {
   return (
@@ -49,19 +47,11 @@ export function ModelStage({
           </AppText>
         </View>
       )}
-      <ClothingOverlayLayer item={bottom} />
+      <ClothingOverlayLayer item={bottoms} />
       <ClothingOverlayLayer item={dress} />
-      <ClothingOverlayLayer item={top} />
+      <ClothingOverlayLayer item={tops} />
       <ClothingOverlayLayer item={jacket} />
       <ClothingOverlayLayer item={shoes} />
-      {previewItem && (
-        <ClothingOverlayLayer
-          item={{
-            ...previewItem,
-            layerOrder: previewItem.layerOrder + 120
-          }}
-        />
-      )}
       {children}
     </View>
   );

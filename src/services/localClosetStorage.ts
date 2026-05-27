@@ -48,6 +48,21 @@ export async function updateClothingItem(item: ClothingItem) {
   return item;
 }
 
+export async function updateWardrobeItem(id: string, updates: Partial<ClothingItem>) {
+  const existing = await getClothingItemById(id);
+  if (!existing) return undefined;
+
+  const updated = {
+    ...existing,
+    ...updates,
+    id,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString()
+  };
+  await clothingStore.setItem(id, updated);
+  return updated;
+}
+
 export async function deleteClothingItem(id: string) {
   await clothingStore.removeItem(id);
 }

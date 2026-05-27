@@ -1,4 +1,4 @@
-export type ClothingCategory = "top" | "bottom" | "shoes" | "jacket" | "dress";
+export type ClothingCategory = "tops" | "bottoms" | "shoes" | "dress" | "jacket";
 
 export type ClothingPlacement = {
   xPercent: number;
@@ -65,8 +65,8 @@ export type SavedModel = {
 };
 
 export type SelectedCategoryKey =
-  | "selectedTopId"
-  | "selectedBottomId"
-  | "selectedShoesId"
-  | "selectedJacketId"
-  | "selectedDressId";
+  | "tops"
+  | "bottoms"
+  | "shoes"
+  | "dress"
+  | "jacket";

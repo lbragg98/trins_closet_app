@@ -19,9 +19,11 @@ type MagicalCategoryOrbProps = {
 };
 
 const categoryInitials: Partial<Record<ClothingCategory, string>> = {
-  top: "T",
-  bottom: "B",
-  shoes: "S"
+  tops: "T",
+  bottoms: "B",
+  shoes: "S",
+  dress: "D",
+  jacket: "J"
 };
 
 export function MagicalCategoryOrb({ category, label, isActive, position, onPress }: MagicalCategoryOrbProps) {

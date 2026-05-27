@@ -15,7 +15,7 @@ import { colors } from "./src/theme/colors";
 export type RootTabParamList = {
   Builder: undefined;
   Closet: undefined;
-  Add: undefined;
+  Add: { editItemId?: string } | undefined;
   Model: undefined;
 };
 

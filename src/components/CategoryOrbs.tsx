@@ -1,7 +1,7 @@
 import { ClothingCategory } from "../types/closet";
 import { MagicalCategoryOrb } from "./MagicalCategoryOrb";
 
-export type OrbCategory = "top" | "bottom" | "shoes";
+export type OrbCategory = ClothingCategory;
 
 type CategoryOrbsProps = {
   activeCategory: OrbCategory | null;
@@ -19,12 +19,17 @@ const orbConfig: Array<{
   };
 }> = [
   {
-    category: "top",
-    label: "Tops",
-    position: { top: "30%", right: "5%" }
+    category: "dress",
+    label: "Dress",
+    position: { top: "20%", right: "4%" }
   },
   {
-    category: "bottom",
+    category: "tops",
+    label: "Tops",
+    position: { top: "36%", right: "4%" }
+  },
+  {
+    category: "bottoms",
     label: "Bottoms",
     position: { top: "58%", left: "5%" }
   },
@@ -32,6 +37,11 @@ const orbConfig: Array<{
     category: "shoes",
     label: "Shoes",
     position: { bottom: "8%", right: "7%" }
+  },
+  {
+    category: "jacket",
+    label: "Jacket",
+    position: { top: "42%", left: "4%" }
   }
 ];
 
@@ -45,7 +55,7 @@ export function CategoryOrbs({ activeCategory, onCategorySelect }: CategoryOrbsP
           label={orb.label}
           position={orb.position}
           isActive={activeCategory === orb.category}
-          onPress={(category) => onCategorySelect(category as OrbCategory)}
+          onPress={onCategorySelect}
         />
       ))}
     </>

@@ -1,5 +1,7 @@
 import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, View, useColorScheme } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
+import type { RootTabParamList } from "../../App";
 import { AppText } from "../components/AppText";
 import { ScreenScaffold } from "../components/ScreenScaffold";
 import { colors } from "../theme/colors";
@@ -11,6 +13,7 @@ import { getDisplayCutoutUri } from "../utils/clothingImage";
 
 export function ClosetScreen() {
   const scheme = useColorScheme();
+  const navigation = useNavigation();
   const clothingItems = useClosetStore((state) => state.clothingItems);
   const deleteClothingItem = useClosetStore((state) => state.deleteClothingItem);
 
@@ -28,6 +31,12 @@ export function ClosetScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteClothingItem(item.id) }
     ]);
+  };
+
+  const editItem = (item: ClothingItem) => {
+    (navigation as unknown as { navigate: (screen: keyof RootTabParamList, params?: RootTabParamList["Add"]) => void }).navigate("Add", {
+      editItemId: item.id
+    });
   };
 
   return (
@@ -65,9 +74,14 @@ export function ClosetScreen() {
                     <AppText style={styles.itemName} numberOfLines={1}>
                       {item.name}
                     </AppText>
-                    <Pressable onPress={() => confirmDelete(item)} style={styles.deleteButton}>
-                      <AppText style={styles.deleteText}>Delete</AppText>
-                    </Pressable>
+                    <View style={styles.buttonRow}>
+                      <Pressable accessibilityRole="button" onPress={() => editItem(item)} style={styles.editButton}>
+                        <AppText style={styles.editText}>Edit</AppText>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" onPress={() => confirmDelete(item)} style={styles.deleteButton}>
+                        <AppText style={styles.deleteText}>Delete</AppText>
+                      </Pressable>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -119,8 +133,28 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "900"
   },
+  buttonRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 10
+  },
+  editButton: {
+    minHeight: 30,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255, 232, 163, 0.56)",
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 249, 255, 0.12)"
+  },
+  editText: {
+    color: colors.accentSoft,
+    fontWeight: "900"
+  },
   deleteButton: {
-    marginTop: 8
+    minHeight: 30,
+    justifyContent: "center"
   },
   deleteText: {
     color: colors.danger,

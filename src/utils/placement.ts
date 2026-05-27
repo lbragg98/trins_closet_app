@@ -21,8 +21,8 @@ export type PlacementFrame = {
 };
 
 export const layerOrderByCategory: Record<ClothingCategory, number> = {
-  bottom: 20,
-  top: 30,
+  bottoms: 20,
+  tops: 30,
   dress: 35,
   jacket: 40,
   shoes: 50
@@ -30,9 +30,9 @@ export const layerOrderByCategory: Record<ClothingCategory, number> = {
 
 export const placementFramesByCategory: Record<ClothingCategory, PlacementFrame> = {
   jacket: { width: 50, height: 34 },
-  top: { width: 44, height: 30 },
+  tops: { width: 44, height: 30 },
   dress: { width: 48, height: 58 },
-  bottom: { width: 42, height: 36 },
+  bottoms: { width: 42, height: 36 },
   shoes: { width: 34, height: 13 }
 };
 
@@ -100,8 +100,8 @@ export function calculateTopPlacement(
   imageDimensions: ImageDimensions = DEFAULT_IMAGE_DIMENSIONS
 ) {
   const shoulderWidth = modelAnchors.rightShoulder.x - modelAnchors.leftShoulder.x;
-  const scale = imageScale("top", shoulderWidth * 1.7, imageDimensions);
-  return placementFromCenter("top", modelAnchors.chest.x, modelAnchors.leftShoulder.y - 8, scale, layerOrderByCategory.top);
+  const scale = imageScale("tops", shoulderWidth * 1.7, imageDimensions);
+  return placementFromCenter("tops", modelAnchors.chest.x, modelAnchors.leftShoulder.y - 8, scale, layerOrderByCategory.tops);
 }
 
 export function calculateBottomPlacement(
@@ -109,8 +109,8 @@ export function calculateBottomPlacement(
   imageDimensions: ImageDimensions = DEFAULT_IMAGE_DIMENSIONS
 ) {
   const hipWidth = modelAnchors.rightHip.x - modelAnchors.leftHip.x;
-  const scale = imageScale("bottom", hipWidth * 1.75, imageDimensions);
-  return placementFromCenter("bottom", modelAnchors.waist.x, modelAnchors.waist.y - 8, scale, layerOrderByCategory.bottom);
+  const scale = imageScale("bottoms", hipWidth * 1.75, imageDimensions);
+  return placementFromCenter("bottoms", modelAnchors.waist.x, modelAnchors.waist.y - 8, scale, layerOrderByCategory.bottoms);
 }
 
 export function calculateDressPlacement(
@@ -152,8 +152,8 @@ export function getDefaultPlacementForCategory(
   modelAnchors: ModelAnchors = MODEL_ANCHORS,
   imageDimensions: ImageDimensions = DEFAULT_IMAGE_DIMENSIONS
 ) {
-  if (category === "top") return calculateTopPlacement(modelAnchors, imageDimensions);
-  if (category === "bottom") return calculateBottomPlacement(modelAnchors, imageDimensions);
+  if (category === "tops") return calculateTopPlacement(modelAnchors, imageDimensions);
+  if (category === "bottoms") return calculateBottomPlacement(modelAnchors, imageDimensions);
   if (category === "dress") return calculateDressPlacement(modelAnchors, imageDimensions);
   if (category === "shoes") return calculateShoesPlacement(modelAnchors, imageDimensions);
   return calculateJacketPlacement(modelAnchors, imageDimensions);
@@ -161,8 +161,8 @@ export function getDefaultPlacementForCategory(
 
 export function getSuggestedPlacementForCategory(category: ClothingCategory): ClothingPlacement {
   const suggestions: Record<ClothingCategory, ClothingPlacement> = {
-    top: { xPercent: 50, yPercent: 38, scale: 1, rotation: 0, layerOrder: layerOrderByCategory.top },
-    bottom: { xPercent: 50, yPercent: 58, scale: 1, rotation: 0, layerOrder: layerOrderByCategory.bottom },
+    tops: { xPercent: 50, yPercent: 38, scale: 1, rotation: 0, layerOrder: layerOrderByCategory.tops },
+    bottoms: { xPercent: 50, yPercent: 58, scale: 1, rotation: 0, layerOrder: layerOrderByCategory.bottoms },
     shoes: { xPercent: 50, yPercent: 85, scale: 0.8, rotation: 0, layerOrder: layerOrderByCategory.shoes },
     jacket: { xPercent: 50, yPercent: 38, scale: 1.1, rotation: 0, layerOrder: layerOrderByCategory.jacket },
     dress: { xPercent: 50, yPercent: 50, scale: 1.15, rotation: 0, layerOrder: layerOrderByCategory.dress }
@@ -173,8 +173,8 @@ export function getSuggestedPlacementForCategory(category: ClothingCategory): Cl
 
 export const defaultPlacementByCategory: Record<ClothingCategory, DefaultPlacement> = {
   jacket: getDefaultPlacementForCategory("jacket"),
-  top: getDefaultPlacementForCategory("top"),
+  tops: getDefaultPlacementForCategory("tops"),
   dress: getDefaultPlacementForCategory("dress"),
-  bottom: getDefaultPlacementForCategory("bottom"),
+  bottoms: getDefaultPlacementForCategory("bottoms"),
   shoes: getDefaultPlacementForCategory("shoes")
 };

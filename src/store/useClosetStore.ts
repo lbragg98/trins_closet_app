@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import * as localClosetStorage from "../services/localClosetStorage";
 import { ClothingCategory, ClothingItem, Outfit, SavedModel } from "../types/closet";
+import { categories, normalizeCategory } from "../utils/categories";
 import { getDefaultPlacementForCategory, legacyPlacementToNormalized } from "../utils/placement";
 
 type StoredClosetState = {
@@ -10,20 +11,19 @@ type StoredClosetState = {
   models: SavedModel[];
 };
 
+export type SelectedItems = Partial<Record<ClothingCategory, string | null>>;
+
 type ClosetState = StoredClosetState & {
-  selectedTopId?: string;
-  selectedBottomId?: string;
-  selectedShoesId?: string;
-  selectedJacketId?: string;
-  selectedDressId?: string;
+  selectedItems: SelectedItems;
   customModelUri?: string;
   activeModelId?: string;
   isHydrated: boolean;
   addClothingItem: (item: Omit<ClothingItem, "id" | "createdAt">) => void;
+  updateClothingItem: (id: string, updates: Partial<Omit<ClothingItem, "id" | "createdAt">>) => void;
   deleteClothingItem: (id: string) => void;
   deleteOutfit: (id: string) => void;
   saveOutfit: (name?: string) => void;
-  setSelectedItem: (category: ClothingCategory, id?: string) => void;
+  setSelectedItem: (category: ClothingCategory, id?: string | null) => void;
   cycleSelectedItem: (category: ClothingCategory, direction: "previous" | "next") => void;
   saveModel: (model: Omit<SavedModel, "id" | "createdAt" | "updatedAt">) => void;
   deleteModel: (id: string) => void;
@@ -32,14 +32,22 @@ type ClosetState = StoredClosetState & {
   hydrateFromStorage: () => Promise<void>;
 };
 
+const emptySelectedItems = (): SelectedItems =>
+  Object.fromEntries(categories.map((category) => [category, null])) as SelectedItems;
+
+const createId = (prefix: string) =>
+  `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => {
-  if (!isSupportedCategory(item.category)) return undefined;
+  const category = normalizeCategory(item.category);
+  if (!category) return undefined;
 
   const legacyItem = item as ClothingItem & { imageUri?: string };
-  const placement = getDefaultPlacementForCategory(item.category);
+  const placement = getDefaultPlacementForCategory(category);
 
   return {
     ...item,
+    category,
     originalImageDataUrl: item.originalImageDataUrl ?? legacyItem.imageUri ?? item.cutoutImageDataUrl,
     cutoutImageDataUrl: item.cutoutImageDataUrl ?? legacyItem.imageUri ?? item.originalImageDataUrl,
     ...(item.transformedCutoutDataUrl ? { transformedCutoutDataUrl: item.transformedCutoutDataUrl } : {}),
@@ -51,7 +59,7 @@ const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => 
     layerOrder: Number.isFinite(item.layerOrder) ? item.layerOrder : placement.layerOrder,
     placement:
       item.placement ??
-      legacyPlacementToNormalized(item.category, {
+      legacyPlacementToNormalized(category, {
         x: Number.isFinite(item.x) ? item.x : placement.x,
         y: Number.isFinite(item.y) ? item.y : placement.y,
         scale: Number.isFinite(item.scale) ? item.scale : placement.scale,
@@ -67,29 +75,34 @@ const normalizeSavedClothingItems = (items: ClothingItem[]) =>
     .map(normalizeClothingItem)
     .filter((item): item is ClothingItem => item !== undefined);
 
-const isSupportedCategory = (category: string): category is ClothingCategory =>
-  category === "top" || category === "bottom" || category === "shoes" || category === "jacket" || category === "dress";
+const normalizeOutfit = (outfit: Outfit): Outfit => {
+  const selectedItemIds: Partial<Record<ClothingCategory, string[]>> = {};
 
-const createId = (prefix: string) =>
-  `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  Object.entries(outfit.selectedItemIds).forEach(([rawCategory, ids]) => {
+    const category = normalizeCategory(rawCategory);
+    if (category) selectedItemIds[category] = ids;
+  });
 
-const getSelectedKey = (category: ClothingCategory) => {
-  if (category === "top") return "selectedTopId";
-  if (category === "bottom") return "selectedBottomId";
-  if (category === "shoes") return "selectedShoesId";
-  if (category === "jacket") return "selectedJacketId";
-  return "selectedDressId";
+  return {
+    ...outfit,
+    selectedItemIds
+  };
 };
+
+const selectedItemsFromClothing = (items: ClothingItem[]): SelectedItems => ({
+  ...emptySelectedItems(),
+  tops: items.find((item) => item.category === "tops")?.id ?? null,
+  bottoms: items.find((item) => item.category === "bottoms")?.id ?? null,
+  shoes: items.find((item) => item.category === "shoes")?.id ?? null,
+  dress: items.find((item) => item.category === "dress")?.id ?? null,
+  jacket: items.find((item) => item.category === "jacket")?.id ?? null
+});
 
 export const useClosetStore = create<ClosetState>((set, get) => ({
   clothingItems: [],
   outfits: [],
   models: [],
-  selectedTopId: undefined,
-  selectedBottomId: undefined,
-  selectedShoesId: undefined,
-  selectedJacketId: undefined,
-  selectedDressId: undefined,
+  selectedItems: emptySelectedItems(),
   customModelUri: undefined,
   activeModelId: undefined,
   isHydrated: false,
@@ -113,16 +126,49 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
     get().setSelectedItem(newItem.category, newItem.id);
   },
 
+  updateClothingItem: (id, updates) => {
+    const existing = get().clothingItems.find((entry) => entry.id === id);
+    if (!existing) return;
+
+    const previousCategory = existing.category;
+    const nextCategory = updates.category ?? existing.category;
+    const updatedItem: ClothingItem = {
+      ...existing,
+      ...updates,
+      category: nextCategory,
+      updatedAt: new Date().toISOString()
+    };
+
+    set((state) => {
+      const selectedItems = { ...state.selectedItems };
+      if (previousCategory !== nextCategory && selectedItems[previousCategory] === id) {
+        selectedItems[previousCategory] = null;
+        selectedItems[nextCategory] = id;
+      }
+
+      const nextState = {
+        ...state,
+        clothingItems: state.clothingItems.map((entry) => (entry.id === id ? updatedItem : entry)),
+        selectedItems
+      };
+      void localClosetStorage.updateClothingItem(updatedItem);
+      return nextState;
+    });
+  },
+
   deleteClothingItem: (id) => {
     const item = get().clothingItems.find((entry) => entry.id === id);
     if (!item) return;
 
     set((state) => {
       const clothingItems = state.clothingItems.filter((entry) => entry.id !== id);
-      const nextByCategory = clothingItems.find((entry) => entry.category === item.category)?.id;
+      const selectedItems = Object.fromEntries(
+        categories.map((category) => [category, state.selectedItems[category] === id ? null : state.selectedItems[category] ?? null])
+      ) as SelectedItems;
       const nextState = {
         ...state,
         clothingItems,
+        selectedItems,
         outfits: state.outfits.map((outfit) => ({
           ...outfit,
           selectedItemIds: Object.fromEntries(
@@ -131,12 +177,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
               ids?.filter((itemId) => itemId !== id)
             ])
           )
-        })),
-        selectedTopId: state.selectedTopId === id ? nextByCategory : state.selectedTopId,
-        selectedBottomId: state.selectedBottomId === id ? nextByCategory : state.selectedBottomId,
-        selectedShoesId: state.selectedShoesId === id ? nextByCategory : state.selectedShoesId,
-        selectedJacketId: state.selectedJacketId === id ? nextByCategory : state.selectedJacketId,
-        selectedDressId: state.selectedDressId === id ? nextByCategory : state.selectedDressId
+        }))
       };
       void localClosetStorage.deleteClothingItem(id);
       return nextState;
@@ -146,19 +187,19 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
   saveOutfit: (name) => {
     set((state) => {
       const outfitNumber = state.outfits.length + 1;
+      const selectedItemIds = Object.fromEntries(
+        categories.map((category) => {
+          const selectedId = state.selectedItems[category];
+          return [category, selectedId ? [selectedId] : []];
+        })
+      ) as Partial<Record<ClothingCategory, string[]>>;
       const nextState = {
         ...state,
         outfits: [
           {
             id: createId("outfit"),
             name: name?.trim() || `Outfit ${outfitNumber}`,
-            selectedItemIds: {
-              top: state.selectedTopId ? [state.selectedTopId] : [],
-              bottom: state.selectedBottomId ? [state.selectedBottomId] : [],
-              shoes: state.selectedShoesId ? [state.selectedShoesId] : [],
-              jacket: state.selectedJacketId ? [state.selectedJacketId] : [],
-              dress: state.selectedDressId ? [state.selectedDressId] : []
-            },
+            selectedItemIds,
             createdAt: new Date().toISOString()
           },
           ...state.outfits
@@ -178,28 +219,20 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
   },
 
   setSelectedItem: (category, id) => {
-    set((state) => {
-      const selectedKey = getSelectedKey(category);
-      const nextState = { ...state, [selectedKey]: id };
-      return nextState;
-    });
+    set((state) => ({
+      ...state,
+      selectedItems: {
+        ...state.selectedItems,
+        [category]: id ?? null
+      }
+    }));
   },
 
   cycleSelectedItem: (category, direction) => {
     const items = get().clothingItems.filter((item) => item.category === category);
     if (items.length === 0) return;
 
-    const selected =
-      category === "top"
-        ? get().selectedTopId
-        : category === "bottom"
-          ? get().selectedBottomId
-          : category === "shoes"
-            ? get().selectedShoesId
-            : category === "jacket"
-              ? get().selectedJacketId
-              : get().selectedDressId;
-
+    const selected = get().selectedItems[category];
     const currentIndex = Math.max(
       0,
       items.findIndex((item) => item.id === selected)
@@ -317,21 +350,17 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         void localClosetStorage.saveModel(normalizedActiveModel);
       } else if (!normalizedActiveModel && normalizedModels.length > 0) {
         normalizedActiveModel = normalizedModels[0];
-        normalizedModels = normalizedModels.map((model) => ({ ...model, isActive: model.id === normalizedActiveModel?.id }));
+        normalizedModels = normalizedModels.map((model) => ({ ...model, isActive: entryIsModel(model, normalizedActiveModel) }));
         void localClosetStorage.setActiveModel(normalizedActiveModel.id);
       } else if (normalizedActiveModel) {
-        normalizedModels = normalizedModels.map((model) => ({ ...model, isActive: model.id === normalizedActiveModel?.id }));
+        normalizedModels = normalizedModels.map((model) => ({ ...model, isActive: entryIsModel(model, normalizedActiveModel) }));
       }
 
       set({
         clothingItems,
-        outfits,
+        outfits: outfits.map(normalizeOutfit),
         models: normalizedModels,
-        selectedTopId: clothingItems.find((item) => item.category === "top")?.id,
-        selectedBottomId: clothingItems.find((item) => item.category === "bottom")?.id,
-        selectedShoesId: clothingItems.find((item) => item.category === "shoes")?.id,
-        selectedJacketId: clothingItems.find((item) => item.category === "jacket")?.id,
-        selectedDressId: clothingItems.find((item) => item.category === "dress")?.id,
+        selectedItems: selectedItemsFromClothing(clothingItems),
         activeModelId: normalizedActiveModel?.id,
         customModelUri: normalizedActiveModel?.imageDataUrl,
         isHydrated: true
@@ -341,3 +370,5 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
     }
   }
 }));
+
+const entryIsModel = (model: SavedModel, activeModel?: SavedModel) => model.id === activeModel?.id;

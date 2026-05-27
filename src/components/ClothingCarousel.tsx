@@ -52,11 +52,16 @@ export function ClothingCarousel({
   const currentIndexRef = useRef(0);
   const snapTimer = useRef<ReturnType<typeof setTimeout>>();
   const lastTap = useRef(0);
+  const onPreviewChangeRef = useRef(onPreviewChange);
+  const itemSignature = items.map((item) => `${item.id}:${item.updatedAt ?? item.createdAt}:${item.name}`).join("|");
   const carouselEntries = useMemo<CarouselEntry[]>(
     () => [{ type: "none", id: "none" }, ...items.map((item) => ({ type: "item" as const, id: item.id, item }))],
-    [items]
+    [itemSignature]
   );
-  const itemSignature = items.map((item) => item.id).join("|");
+
+  useEffect(() => {
+    onPreviewChangeRef.current = onPreviewChange;
+  }, [onPreviewChange]);
 
   const snapOffsetToZero = () => {
     animate(x, 0, {
@@ -112,8 +117,8 @@ export function ClothingCarousel({
 
     currentIndexRef.current = wrappedIndex;
     const entry = carouselEntries[wrappedIndex];
-    onPreviewChange(entry?.type === "item" ? entry.item : undefined);
-  }, [carouselEntries, currentIndex, onPreviewChange]);
+    onPreviewChangeRef.current(entry?.type === "item" ? entry.item : undefined);
+  }, [carouselEntries, currentIndex]);
 
   const confirmCurrentItem = () => {
     const activeEntry = carouselEntries[currentIndexRef.current];
