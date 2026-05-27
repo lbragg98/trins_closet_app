@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8
   },
   toolButtonText: {
-    color: colors.textDark,
+    color: "#3B1954",
     fontSize: 12,
     fontWeight: "900"
   },
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 249, 255, 0.82)"
   },
   secondaryText: {
-    color: colors.textDark,
+    color: "#3B1954",
     fontWeight: "900",
     fontSize: 12
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent
   },
   saveText: {
-    color: colors.text,
+    color: "#3B1954",
     fontWeight: "900",
     fontSize: 12
   }

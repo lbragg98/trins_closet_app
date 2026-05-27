@@ -53,8 +53,13 @@ export function OutfitBuilderScreen() {
     });
   };
 
-  const handleConfirmItem = (item: ClothingItem) => {
-    setSelectedItem(item.category, item.id);
+  const handleConfirmItem = (item?: ClothingItem) => {
+    if (!item && activeCategory) {
+      setSelectedItem(activeCategory, undefined);
+    } else if (item) {
+      setSelectedItem(item.category, item.id);
+    }
+
     setPreviewItem(undefined);
     setActiveCategory(null);
   };

@@ -13,8 +13,19 @@ type ClothingCarouselProps = {
   items: ClothingItem[];
   selectedItemId?: string;
   onPreviewChange: (item?: ClothingItem) => void;
-  onConfirmItem: (item: ClothingItem) => void;
+  onConfirmItem: (item?: ClothingItem) => void;
 };
+
+type CarouselEntry =
+  | {
+      type: "none";
+      id: "none";
+    }
+  | {
+      type: "item";
+      id: string;
+      item: ClothingItem;
+    };
 
 const itemWidth = 104;
 const itemGap = 12;
@@ -41,6 +52,11 @@ export function ClothingCarousel({
   const currentIndexRef = useRef(0);
   const snapTimer = useRef<ReturnType<typeof setTimeout>>();
   const lastTap = useRef(0);
+  const carouselEntries = useMemo<CarouselEntry[]>(
+    () => [{ type: "none", id: "none" }, ...items.map((item) => ({ type: "item" as const, id: item.id, item }))],
+    [items]
+  );
+  const itemSignature = items.map((item) => item.id).join("|");
 
   const snapOffsetToZero = () => {
     animate(x, 0, {
@@ -61,38 +77,33 @@ export function ClothingCarousel({
   };
 
   const visibleItems = useMemo(() => {
-    if (items.length === 0) return [];
+    if (carouselEntries.length === 0) return [];
 
     return virtualOffsets.map((offset) => {
-      const index = wrapIndex(currentIndex + offset, items.length);
+      const index = wrapIndex(currentIndex + offset, carouselEntries.length);
       return {
-        item: items[index],
+        entry: carouselEntries[index],
         index,
         offset
       };
     });
-  }, [currentIndex, items]);
+  }, [carouselEntries, currentIndex]);
 
   useEffect(() => {
     const selectedIndex = Math.max(
       0,
-      items.findIndex((item) => item.id === selectedItemId)
+      carouselEntries.findIndex((entry) => entry.type === "item" && entry.item.id === selectedItemId)
     );
-    const nextIndex = items.length > 0 ? selectedIndex : 0;
+    const nextIndex = carouselEntries.length > 0 ? selectedIndex : 0;
     x.set(0);
     currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
 
     return clearSnapTimer;
-  }, [activeCategory]);
+  }, [activeCategory, itemSignature, selectedItemId, x]);
 
   useEffect(() => {
-    if (items.length === 0) {
-      onPreviewChange(undefined);
-      return;
-    }
-
-    const wrappedIndex = wrapIndex(currentIndex, items.length);
+    const wrappedIndex = wrapIndex(currentIndex, carouselEntries.length);
     if (wrappedIndex !== currentIndex) {
       currentIndexRef.current = wrappedIndex;
       setCurrentIndex(wrappedIndex);
@@ -100,25 +111,13 @@ export function ClothingCarousel({
     }
 
     currentIndexRef.current = wrappedIndex;
-    onPreviewChange(items[wrappedIndex]);
-  }, [currentIndex, items, onPreviewChange]);
-
-  if (items.length === 0) {
-    return (
-      <View pointerEvents="box-none" style={styles.emptyWrap}>
-        <View style={[styles.emptyMessage, { backgroundColor: "rgba(35, 18, 55, 0.84)" }]}>
-          <AppText style={styles.emptyTitle}>No {activeCategory}s added yet</AppText>
-          <AppText muted style={styles.emptySubtitle}>
-            Add clothing to use this category
-          </AppText>
-        </View>
-      </View>
-    );
-  }
+    const entry = carouselEntries[wrappedIndex];
+    onPreviewChange(entry?.type === "item" ? entry.item : undefined);
+  }, [carouselEntries, currentIndex, onPreviewChange]);
 
   const confirmCurrentItem = () => {
-    const activeItem = items[currentIndexRef.current];
-    if (activeItem) onConfirmItem(activeItem);
+    const activeEntry = carouselEntries[currentIndexRef.current];
+    onConfirmItem(activeEntry?.type === "item" ? activeEntry.item : undefined);
   };
 
   const handleDragEnd = () => {
@@ -127,9 +126,9 @@ export function ClothingCarousel({
       let nextIndex = previousIndex;
 
       if (offset < -dragThreshold) {
-        nextIndex = wrapIndex(previousIndex + 1, items.length);
+        nextIndex = wrapIndex(previousIndex + 1, carouselEntries.length);
       } else if (offset > dragThreshold) {
-        nextIndex = wrapIndex(previousIndex - 1, items.length);
+        nextIndex = wrapIndex(previousIndex - 1, carouselEntries.length);
       }
 
       currentIndexRef.current = nextIndex;
@@ -147,23 +146,25 @@ export function ClothingCarousel({
           width: "100%",
           height: "100%",
           x,
-          cursor: items.length > 1 ? "grab" : "default",
+          cursor: carouselEntries.length > 1 ? "grab" : "default",
           touchAction: "pan-y"
         }}
-        drag={items.length > 1 ? "x" : false}
+        drag={carouselEntries.length > 1 ? "x" : false}
         dragMomentum={false}
         dragElastic={0.02}
         dragConstraints={{ left: -step, right: step }}
         onDragStart={clearSnapTimer}
         onDragEnd={handleDragEnd}
       >
-        {visibleItems.map(({ item, index, offset }) => {
+        {visibleItems.map(({ entry, index, offset }) => {
           const isCentered = offset === 0;
-          const isSelected = item.id === selectedItemId;
+          const isNone = entry.type === "none";
+          const isSelected = isNone ? selectedItemId === undefined : entry.item.id === selectedItemId;
+          const itemName = isNone ? "None" : entry.item.name;
 
           return (
             <motion.div
-              key={`${item.id}-${offset}-${index}`}
+              key={`${entry.id}-${offset}-${index}`}
               style={{
                 position: "absolute",
                 left: "50%",
@@ -181,7 +182,7 @@ export function ClothingCarousel({
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Preview ${item.name}. Double tap to select.`}
+                accessibilityLabel={`Preview ${itemName}. Double tap to select.`}
                 onPress={() => {
                   const now = Date.now();
                   if (now - lastTap.current < 320) {
@@ -200,10 +201,16 @@ export function ClothingCarousel({
                 ]}
               >
                 <View style={styles.imageWrap}>
-                  <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
+                  {isNone ? (
+                    <View style={styles.noneIcon}>
+                      <AppText style={styles.noneIconText}>None</AppText>
+                    </View>
+                  ) : (
+                    <Image source={{ uri: getDisplayCutoutUri(entry.item) }} resizeMode="contain" style={styles.image} />
+                  )}
                 </View>
                 <AppText style={styles.itemName} numberOfLines={1}>
-                  {item.name}
+                  {itemName}
                 </AppText>
                 {isCentered ? (
                   <AppText style={styles.selectedText}>Previewing</AppText>
@@ -243,11 +250,28 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     height: 72,
-    width: "100%"
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center"
   },
   image: {
     width: "100%",
     height: "100%"
+  },
+  noneIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: "rgba(255, 232, 163, 0.76)",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 249, 255, 0.12)"
+  },
+  noneIconText: {
+    color: colors.accentSoft,
+    fontSize: 11,
+    fontWeight: "900"
   },
   itemName: {
     marginTop: 8,
