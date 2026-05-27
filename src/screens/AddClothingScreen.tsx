@@ -26,6 +26,7 @@ export function AddClothingScreen() {
   const updateClothingItem = useClosetStore((state) => state.updateClothingItem);
   const clothingItems = useClosetStore((state) => state.clothingItems);
   const customModelUri = useClosetStore((state) => state.customModelUri);
+  const isHydrated = useClosetStore((state) => state.isHydrated);
   const editItemId = route.params?.editItemId;
   const editingItem = editItemId ? clothingItems.find((item) => item.id === editItemId) : undefined;
   const [originalImageDataUrl, setOriginalImageDataUrl] = useState<string>();
@@ -50,7 +51,7 @@ export function AddClothingScreen() {
   };
 
   useEffect(() => {
-    if (!editingItem) return;
+    if (!isHydrated || !editingItem) return;
 
     setName(editingItem.name);
     setColor(editingItem.color ?? "");
@@ -62,7 +63,7 @@ export function AddClothingScreen() {
     setTransform(editingItem.transform ?? getEmptyTransform());
     setStatus("idle");
     setStatusMessage("");
-  }, [editingItem?.id]);
+  }, [editingItem?.id, isHydrated]);
 
   const resetPlacement = (nextCategory = category) => {
     setPlacement(getSuggestedPlacementForCategory(nextCategory));
@@ -248,6 +249,19 @@ export function AddClothingScreen() {
     setStatusMessage("Clothing item saved locally.");
     Alert.alert("Added", `${trimmedName} is now in your closet.`);
   };
+
+  if (isEditing && !isHydrated) {
+    return (
+      <ScreenScaffold>
+        <View style={styles.missingEdit}>
+          <AppText style={sharedStyles.title}>Loading item</AppText>
+          <AppText muted style={styles.subtitle}>
+            Loading your local closet before opening this item.
+          </AppText>
+        </View>
+      </ScreenScaffold>
+    );
+  }
 
   if (isEditing && !editingItem) {
     return (

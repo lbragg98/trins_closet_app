@@ -15,6 +15,7 @@ export function ClosetScreen() {
   const scheme = useColorScheme();
   const navigation = useNavigation();
   const clothingItems = useClosetStore((state) => state.clothingItems);
+  const isHydrated = useClosetStore((state) => state.isHydrated);
   const deleteClothingItem = useClosetStore((state) => state.deleteClothingItem);
 
   const confirmDelete = (item: ClothingItem) => {
@@ -33,7 +34,12 @@ export function ClosetScreen() {
     ]);
   };
 
-  const editItem = (item: ClothingItem) => {
+  const editItem = (id: string) => {
+    if (!isHydrated) return;
+
+    const item = clothingItems.find((entry) => entry.id === id);
+    if (!item) return;
+
     (navigation as unknown as { navigate: (screen: keyof RootTabParamList, params?: RootTabParamList["Add"]) => void }).navigate("Add", {
       editItemId: item.id
     });
@@ -45,7 +51,7 @@ export function ClosetScreen() {
         <View style={styles.header}>
           <AppText style={sharedStyles.title}>Closet</AppText>
           <AppText muted style={styles.subtitle}>
-            Wardrobe pieces, sorted by silhouette.
+            {isHydrated ? "Wardrobe pieces, sorted by silhouette." : "Loading your local closet..."}
           </AppText>
         </View>
 
@@ -84,7 +90,13 @@ export function ClosetScreen() {
                         {item.name || "Untitled item"}
                       </AppText>
                       <View style={styles.buttonRow}>
-                        <Pressable accessibilityRole="button" onPress={() => editItem(item)} style={styles.editButton}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityState={{ disabled: !isHydrated }}
+                          disabled={!isHydrated}
+                          onPress={() => editItem(item.id)}
+                          style={[styles.editButton, !isHydrated && styles.disabledButton]}
+                        >
                           <AppText style={styles.editText}>Edit</AppText>
                         </Pressable>
                         <Pressable accessibilityRole="button" onPress={() => confirmDelete(item)} style={styles.deleteButton}>
@@ -176,6 +188,9 @@ const styles = StyleSheet.create({
   editText: {
     color: colors.accentSoft,
     fontWeight: "900"
+  },
+  disabledButton: {
+    opacity: 0.48
   },
   deleteButton: {
     minHeight: 30,

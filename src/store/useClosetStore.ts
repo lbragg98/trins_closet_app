@@ -410,7 +410,15 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         isHydrated: true
       });
     } catch {
-      set({ isHydrated: true });
+      set({
+        clothingItems: [],
+        outfits: [],
+        models: [],
+        selectedItems: emptySelectedItems(),
+        activeModelId: undefined,
+        customModelUri: undefined,
+        isHydrated: true
+      });
     }
   }
 }));
