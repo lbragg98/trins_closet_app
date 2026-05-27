@@ -1,6 +1,6 @@
 import { Alert, FlatList, Image, Platform, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 
 import type { RootTabParamList } from "../../App";
 import { AppText } from "../components/AppText";
@@ -11,6 +11,7 @@ import { useClosetStore } from "../store/useClosetStore";
 import { ClothingItem } from "../types/closet";
 import { categories, categoryLabels } from "../utils/categories";
 import { getDisplayCutoutUri } from "../utils/clothingImage";
+import { createThumbnailDataUrl } from "../utils/thumbnail";
 
 type ClosetListEntry =
   | {
@@ -28,14 +29,13 @@ type ClosetListEntry =
       items: ClothingItem[];
     };
 
-const maxInlineThumbnailLength = 900_000;
-
 export function ClosetScreen() {
   const scheme = useColorScheme();
   const navigation = useNavigation();
   const clothingItems = useClosetStore((state) => state.clothingItems);
   const isHydrated = useClosetStore((state) => state.isHydrated);
   const deleteClothingItem = useClosetStore((state) => state.deleteClothingItem);
+  const updateClothingItem = useClosetStore((state) => state.updateClothingItem);
   const closetRows = useMemo<ClosetListEntry[]>(() => {
     const rows: ClosetListEntry[] = [{ type: "header", id: "header" }];
 
@@ -111,8 +111,6 @@ export function ClosetScreen() {
   };
 
   const renderCard = (item: ClothingItem) => {
-    const imageUri = getSafeThumbnailUri(item);
-
     return (
       <View
         key={item.id}
@@ -126,13 +124,7 @@ export function ClosetScreen() {
         ]}
       >
         <View style={styles.thumb}>
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} resizeMode="contain" style={styles.image} />
-          ) : (
-            <View style={styles.missingThumb}>
-              <AppText style={styles.missingThumbText}>No preview</AppText>
-            </View>
-          )}
+          <ClosetThumbnail item={item} onThumbnailReady={(thumbnailDataUrl) => updateClothingItem(item.id, { thumbnailDataUrl })} />
         </View>
         <AppText style={styles.itemName} numberOfLines={1}>
           {item.name || "Untitled item"}
@@ -172,13 +164,48 @@ export function ClosetScreen() {
   );
 }
 
-const getSafeThumbnailUri = (item: ClothingItem) => {
-  const imageUri = getDisplayCutoutUri(item);
-  if (!imageUri) return undefined;
+const ClosetThumbnail = memo(function ClosetThumbnail({
+  item,
+  onThumbnailReady
+}: {
+  item: ClothingItem;
+  onThumbnailReady: (thumbnailDataUrl: string) => void;
+}) {
+  const sourceUri = getDisplayCutoutUri(item);
+  const [thumbnailUri, setThumbnailUri] = useState(item.thumbnailDataUrl);
 
-  if (imageUri.startsWith("data:") && imageUri.length > maxInlineThumbnailLength) return undefined;
-  return imageUri;
-};
+  useEffect(() => {
+    let cancelled = false;
+    setThumbnailUri(item.thumbnailDataUrl);
+
+    if (!sourceUri) return;
+    if (item.thumbnailDataUrl) return;
+
+    void createThumbnailDataUrl(sourceUri)
+      .then((thumbnailDataUrl) => {
+        if (cancelled) return;
+        setThumbnailUri(thumbnailDataUrl);
+        onThumbnailReady(thumbnailDataUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setThumbnailUri(undefined);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id, item.thumbnailDataUrl, onThumbnailReady, sourceUri]);
+
+  if (!thumbnailUri) {
+    return (
+      <View style={styles.missingThumb}>
+        <AppText style={styles.missingThumbText}>{sourceUri ? "Loading" : "No preview"}</AppText>
+      </View>
+    );
+  }
+
+  return <Image source={{ uri: thumbnailUri }} resizeMode="contain" style={styles.image} />;
+});
 
 const styles = StyleSheet.create({
   content: {

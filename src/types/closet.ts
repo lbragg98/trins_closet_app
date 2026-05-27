@@ -34,6 +34,7 @@ export type ClothingItem = {
   originalImageDataUrl: string;
   cutoutImageDataUrl: string;
   transformedCutoutDataUrl?: string;
+  thumbnailDataUrl?: string;
   x: number;
   y: number;
   scale: number;
