@@ -41,15 +41,30 @@ export function ClothingTransformEditor({
   const dragY = useMotionValue(0);
   const resizeStart = useRef<{ x: number; y: number; scale: number }>();
   const warpStart = useRef<{ x: number; y: number; corner: CornerId; transform: ClothingTransform }>();
-  const frame = placementFramesByCategory[category];
-  const legacy = normalizedPlacementToLegacy(category, initialPlacement);
-  const itemWidth = (frame.width / 100) * stageWidth * initialPlacement.scale;
-  const itemHeight = (frame.height / 100) * stageHeight * initialPlacement.scale;
+  const placementFrame = placementFramesByCategory[category];
+  const frame = placementFrame ?? placementFramesByCategory.tops;
+  const safePlacement = sanitizePlacement(initialPlacement);
+  const safeTransform = sanitizeTransform(transform);
+  const placementFrameRef = useRef<number>();
+  const transformFrameRef = useRef<number>();
+  const pendingPlacementPatch = useRef<Partial<ClothingPlacement>>();
+  const pendingTransformPatch = useRef<Partial<ClothingTransform>>();
+  const legacy = normalizedPlacementToLegacy(category, safePlacement);
+  const itemWidth = Math.max(1, (frame.width / 100) * stageWidth * safePlacement.scale);
+  const itemHeight = Math.max(1, (frame.height / 100) * stageHeight * safePlacement.scale);
 
   useEffect(() => {
     dragX.set(0);
     dragY.set(0);
-  }, [category, clothingCutoutUrl, initialPlacement.xPercent, initialPlacement.yPercent, dragX, dragY]);
+    }, [category, clothingCutoutUrl, initialPlacement.xPercent, initialPlacement.yPercent, dragX, dragY]);
+
+  useEffect(
+    () => () => {
+      if (placementFrameRef.current) cancelAnimationFrame(placementFrameRef.current);
+      if (transformFrameRef.current) cancelAnimationFrame(transformFrameRef.current);
+    },
+    []
+  );
 
   const itemStyle = useMemo(
     () => ({
@@ -58,22 +73,22 @@ export function ClothingTransformEditor({
       top: `${legacy.y}%`,
       width: itemWidth,
       height: itemHeight,
-      rotate: initialPlacement.rotation,
+      rotate: safePlacement.rotation,
       x: dragX,
       y: dragY,
       touchAction: "none" as const,
       zIndex: 12
     }),
-    [dragX, dragY, initialPlacement.rotation, itemHeight, itemWidth, legacy.x, legacy.y]
+    [dragX, dragY, itemHeight, itemWidth, legacy.x, legacy.y, safePlacement.rotation]
   );
 
-  const imageTransform = `scaleX(${transform.scaleX ?? 1}) scaleY(${transform.scaleY ?? 1}) skewX(${
-    transform.skewX ?? 0
-  }deg) skewY(${transform.skewY ?? 0}deg) rotate(${transform.rotation ?? 0}deg)`;
+  const imageTransform = `scaleX(${safeTransform.scaleX ?? 1}) scaleY(${safeTransform.scaleY ?? 1}) skewX(${
+    safeTransform.skewX ?? 0
+  }deg) skewY(${safeTransform.skewY ?? 0}deg) rotate(${safeTransform.rotation ?? 0}deg)`;
 
   const updatePlacement = (patch: Partial<ClothingPlacement>) => {
     onPlacementChange({
-      ...initialPlacement,
+      ...safePlacement,
       ...patch
     });
   };
@@ -85,28 +100,50 @@ export function ClothingTransformEditor({
       skewX: 0,
       skewY: 0,
       rotation: 0,
-      ...transform,
+      ...safeTransform,
       ...patch,
       mode: "warp"
     });
   };
 
+  const schedulePlacementUpdate = (patch: Partial<ClothingPlacement>) => {
+    pendingPlacementPatch.current = patch;
+    if (placementFrameRef.current) return;
+
+    placementFrameRef.current = requestAnimationFrame(() => {
+      placementFrameRef.current = undefined;
+      if (pendingPlacementPatch.current) updatePlacement(pendingPlacementPatch.current);
+      pendingPlacementPatch.current = undefined;
+    });
+  };
+
+  const scheduleTransformUpdate = (patch: Partial<ClothingTransform>) => {
+    pendingTransformPatch.current = patch;
+    if (transformFrameRef.current) return;
+
+    transformFrameRef.current = requestAnimationFrame(() => {
+      transformFrameRef.current = undefined;
+      if (pendingTransformPatch.current) updateTransform(pendingTransformPatch.current);
+      pendingTransformPatch.current = undefined;
+    });
+  };
+
   const nudge = (deltaX: number, deltaY: number) => {
     updatePlacement({
-      xPercent: clamp(initialPlacement.xPercent + deltaX, 0, 100),
-      yPercent: clamp(initialPlacement.yPercent + deltaY, 0, 100)
+      xPercent: clamp(safePlacement.xPercent + deltaX, 0, 100),
+      yPercent: clamp(safePlacement.yPercent + deltaY, 0, 100)
     });
   };
 
   const resizeBy = (delta: number) => {
     updatePlacement({
-      scale: clamp(Number((initialPlacement.scale + delta).toFixed(2)), 0.2, 2.8)
+      scale: clamp(Number((safePlacement.scale + delta).toFixed(2)), 0.2, 2.8)
     });
   };
 
   const rotateBy = (delta: number) => {
     updatePlacement({
-      rotation: Number((initialPlacement.rotation + delta).toFixed(1))
+      rotation: Number((safePlacement.rotation + delta).toFixed(1))
     });
   };
 
@@ -121,7 +158,7 @@ export function ClothingTransformEditor({
     const skewDirection = corner.startsWith("top") ? -1 : 1;
     const leanDirection = corner.endsWith("Left") ? -1 : 1;
 
-    updateTransform({
+    scheduleTransformUpdate({
       scaleX: clamp(Number(((startTransform.scaleX ?? 1) + horizontal / 180).toFixed(2)), 0.45, 1.8),
       scaleY: clamp(Number(((startTransform.scaleY ?? 1) + vertical / 180).toFixed(2)), 0.45, 1.8),
       skewX: clamp(Number(((startTransform.skewX ?? 0) + (deltaX / 18) * skewDirection).toFixed(1)), -28, 28),
@@ -162,8 +199,8 @@ export function ClothingTransformEditor({
             style={{ ...itemStyle, ...webStyles.selectionBox }}
             onDragEnd={(_, info) => {
               updatePlacement({
-                xPercent: clamp(initialPlacement.xPercent + (info.offset.x / stageWidth) * 100, 0, 100),
-                yPercent: clamp(initialPlacement.yPercent + (info.offset.y / stageHeight) * 100, 0, 100)
+                xPercent: clamp(safePlacement.xPercent + (info.offset.x / stageWidth) * 100, 0, 100),
+                yPercent: clamp(safePlacement.yPercent + (info.offset.y / stageHeight) * 100, 0, 100)
               });
               dragX.set(0);
               dragY.set(0);
@@ -189,7 +226,7 @@ export function ClothingTransformEditor({
                     x: event.clientX,
                     y: event.clientY,
                     corner: handle.id,
-                    transform
+                    transform: safeTransform
                   };
                 }}
                 onPointerMove={(event) => updateCornerWarp(event.clientX, event.clientY)}
@@ -209,12 +246,12 @@ export function ClothingTransformEditor({
                 event.preventDefault();
                 event.stopPropagation();
                 event.currentTarget.setPointerCapture(event.pointerId);
-                resizeStart.current = { x: event.clientX, y: event.clientY, scale: initialPlacement.scale };
+                resizeStart.current = { x: event.clientX, y: event.clientY, scale: safePlacement.scale };
               }}
               onPointerMove={(event) => {
                 if (!resizeStart.current) return;
                 const delta = Math.max(event.clientX - resizeStart.current.x, event.clientY - resizeStart.current.y) / 150;
-                updatePlacement({
+                schedulePlacementUpdate({
                   scale: clamp(Number((resizeStart.current.scale + delta).toFixed(2)), 0.2, 2.8)
                 });
               }}
@@ -258,42 +295,42 @@ export function ClothingTransformEditor({
             <ToolButton
               label="Narrow clothing"
               title="Width -"
-              onPress={() => updateTransform({ scaleX: clamp(Number(((transform.scaleX ?? 1) - 0.04).toFixed(2)), 0.45, 1.8) })}
+              onPress={() => updateTransform({ scaleX: clamp(Number(((safeTransform.scaleX ?? 1) - 0.04).toFixed(2)), 0.45, 1.8) })}
             />
             <ToolButton
               label="Widen clothing"
               title="Width +"
-              onPress={() => updateTransform({ scaleX: clamp(Number(((transform.scaleX ?? 1) + 0.04).toFixed(2)), 0.45, 1.8) })}
+              onPress={() => updateTransform({ scaleX: clamp(Number(((safeTransform.scaleX ?? 1) + 0.04).toFixed(2)), 0.45, 1.8) })}
             />
             <ToolButton
               label="Shorten clothing"
               title="Height -"
-              onPress={() => updateTransform({ scaleY: clamp(Number(((transform.scaleY ?? 1) - 0.04).toFixed(2)), 0.45, 1.8) })}
+              onPress={() => updateTransform({ scaleY: clamp(Number(((safeTransform.scaleY ?? 1) - 0.04).toFixed(2)), 0.45, 1.8) })}
             />
             <ToolButton
               label="Lengthen clothing"
               title="Height +"
-              onPress={() => updateTransform({ scaleY: clamp(Number(((transform.scaleY ?? 1) + 0.04).toFixed(2)), 0.45, 1.8) })}
+              onPress={() => updateTransform({ scaleY: clamp(Number(((safeTransform.scaleY ?? 1) + 0.04).toFixed(2)), 0.45, 1.8) })}
             />
             <ToolButton
               label="Skew left"
               title="Skew L"
-              onPress={() => updateTransform({ skewX: clamp(Number(((transform.skewX ?? 0) - 2).toFixed(1)), -28, 28) })}
+              onPress={() => updateTransform({ skewX: clamp(Number(((safeTransform.skewX ?? 0) - 2).toFixed(1)), -28, 28) })}
             />
             <ToolButton
               label="Skew right"
               title="Skew R"
-              onPress={() => updateTransform({ skewX: clamp(Number(((transform.skewX ?? 0) + 2).toFixed(1)), -28, 28) })}
+              onPress={() => updateTransform({ skewX: clamp(Number(((safeTransform.skewX ?? 0) + 2).toFixed(1)), -28, 28) })}
             />
             <ToolButton
               label="Lean up"
               title="Lean -"
-              onPress={() => updateTransform({ skewY: clamp(Number(((transform.skewY ?? 0) - 2).toFixed(1)), -24, 24) })}
+              onPress={() => updateTransform({ skewY: clamp(Number(((safeTransform.skewY ?? 0) - 2).toFixed(1)), -24, 24) })}
             />
             <ToolButton
               label="Lean down"
               title="Lean +"
-              onPress={() => updateTransform({ skewY: clamp(Number(((transform.skewY ?? 0) + 2).toFixed(1)), -24, 24) })}
+              onPress={() => updateTransform({ skewY: clamp(Number(((safeTransform.skewY ?? 0) + 2).toFixed(1)), -24, 24) })}
             />
           </View>
         </View>
@@ -461,6 +498,26 @@ const styles = StyleSheet.create({
 });
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const finiteNumber = (value: number | undefined, fallback: number) =>
+  Number.isFinite(value) ? (value as number) : fallback;
+
+const sanitizePlacement = (placement: ClothingPlacement): ClothingPlacement => ({
+  xPercent: clamp(finiteNumber(placement.xPercent, 50), 0, 100),
+  yPercent: clamp(finiteNumber(placement.yPercent, 50), 0, 100),
+  scale: clamp(finiteNumber(placement.scale, 1), 0.2, 2.8),
+  rotation: finiteNumber(placement.rotation, 0),
+  layerOrder: finiteNumber(placement.layerOrder, 30)
+});
+
+const sanitizeTransform = (transform: ClothingTransform): ClothingTransform => ({
+  mode: transform.mode ?? "none",
+  scaleX: clamp(finiteNumber(transform.scaleX, 1), 0.45, 1.8),
+  scaleY: clamp(finiteNumber(transform.scaleY, 1), 0.45, 1.8),
+  skewX: clamp(finiteNumber(transform.skewX, 0), -28, 28),
+  skewY: clamp(finiteNumber(transform.skewY, 0), -24, 24),
+  rotation: finiteNumber(transform.rotation, 0)
+});
 
 const webStyles: Record<string, CSSProperties> = {
   cutoutImage: {
