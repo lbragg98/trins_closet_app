@@ -14,13 +14,21 @@ type ClothingOverlayLayerProps = {
 
 export function ClothingOverlayLayer({ item }: ClothingOverlayLayerProps) {
   if (!item) return null;
+  const imageUri = getDisplayCutoutUri(item);
+  if (!imageUri) return null;
 
   const fallbackPlacement = getDefaultPlacementForCategory(item.category);
   const normalizedLegacy = item.placement ? normalizedPlacementToLegacy(item.category, item.placement) : undefined;
   const frame = placementFramesByCategory[item.category];
+  if (!frame) return null;
+
   const x = normalizedLegacy?.x ?? (Number.isFinite(item.x) ? item.x : fallbackPlacement.x);
   const y = normalizedLegacy?.y ?? (Number.isFinite(item.y) ? item.y : fallbackPlacement.y);
-  const scale = item.placement?.scale ?? item.scale ?? fallbackPlacement.scale;
+  const scale = Number.isFinite(item.placement?.scale)
+    ? item.placement?.scale ?? fallbackPlacement.scale
+    : Number.isFinite(item.scale)
+      ? item.scale
+      : fallbackPlacement.scale;
   const rotation = item.placement?.rotation ?? (Number.isFinite(item.rotation) ? item.rotation : fallbackPlacement.rotation);
   const layerOrder = item.placement?.layerOrder ?? item.layerOrder ?? fallbackPlacement.layerOrder;
 
@@ -39,7 +47,7 @@ export function ClothingOverlayLayer({ item }: ClothingOverlayLayerProps) {
         }
       ]}
     >
-      <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image as ImageStyle} />
+      <Image source={{ uri: imageUri }} resizeMode="contain" style={styles.image as ImageStyle} />
     </View>
   );
 }

@@ -50,40 +50,50 @@ export function ClosetScreen() {
         </View>
 
         {categories.map((category) => {
-          const items = clothingItems.filter((item) => item.category === category);
+          const items = clothingItems.filter((item) => item?.id && item.category === category);
 
           return (
             <View key={category} style={styles.section}>
               <AppText style={sharedStyles.sectionTitle}>{categoryLabels[category]}</AppText>
               <View style={styles.grid}>
-                {items.map((item) => (
-                  <View
-                    key={item.id}
-                    style={[
-                      sharedStyles.card,
-                      styles.card,
-                      {
-                        backgroundColor: "rgba(35, 18, 55, 0.78)",
-                        borderColor: "rgba(255, 183, 240, 0.46)"
-                      }
-                    ]}
-                  >
-                    <View style={styles.thumb}>
-                      <Image source={{ uri: getDisplayCutoutUri(item) }} resizeMode="contain" style={styles.image} />
+                {items.map((item) => {
+                  const imageUri = getDisplayCutoutUri(item);
+
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        sharedStyles.card,
+                        styles.card,
+                        {
+                          backgroundColor: "rgba(35, 18, 55, 0.78)",
+                          borderColor: "rgba(255, 183, 240, 0.46)"
+                        }
+                      ]}
+                    >
+                      <View style={styles.thumb}>
+                        {imageUri ? (
+                          <Image source={{ uri: imageUri }} resizeMode="contain" style={styles.image} />
+                        ) : (
+                          <View style={styles.missingThumb}>
+                            <AppText style={styles.missingThumbText}>No image</AppText>
+                          </View>
+                        )}
+                      </View>
+                      <AppText style={styles.itemName} numberOfLines={1}>
+                        {item.name || "Untitled item"}
+                      </AppText>
+                      <View style={styles.buttonRow}>
+                        <Pressable accessibilityRole="button" onPress={() => editItem(item)} style={styles.editButton}>
+                          <AppText style={styles.editText}>Edit</AppText>
+                        </Pressable>
+                        <Pressable accessibilityRole="button" onPress={() => confirmDelete(item)} style={styles.deleteButton}>
+                          <AppText style={styles.deleteText}>Delete</AppText>
+                        </Pressable>
+                      </View>
                     </View>
-                    <AppText style={styles.itemName} numberOfLines={1}>
-                      {item.name}
-                    </AppText>
-                    <View style={styles.buttonRow}>
-                      <Pressable accessibilityRole="button" onPress={() => editItem(item)} style={styles.editButton}>
-                        <AppText style={styles.editText}>Edit</AppText>
-                      </Pressable>
-                      <Pressable accessibilityRole="button" onPress={() => confirmDelete(item)} style={styles.deleteButton}>
-                        <AppText style={styles.deleteText}>Delete</AppText>
-                      </Pressable>
-                    </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
           );
@@ -127,6 +137,21 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%"
+  },
+  missingThumb: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 232, 163, 0.36)",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 249, 255, 0.1)"
+  },
+  missingThumbText: {
+    color: colors.accentSoft,
+    fontSize: 12,
+    fontWeight: "900"
   },
   itemName: {
     marginTop: 10,

@@ -39,17 +39,26 @@ const createId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => {
+  if (!item || typeof item !== "object") return undefined;
+
+  const legacyItem = item as ClothingItem & { imageUri?: string; imageUrl?: string; image?: string };
   const category = normalizeCategory(item.category);
   if (!category) return undefined;
 
-  const legacyItem = item as ClothingItem & { imageUri?: string };
   const placement = getDefaultPlacementForCategory(category);
+  const now = new Date().toISOString();
+  const id = typeof item.id === "string" && item.id.trim() ? item.id : createId("clothing");
+  const fallbackImage =
+    item.cutoutImageDataUrl ?? item.originalImageDataUrl ?? legacyItem.imageUrl ?? legacyItem.imageUri ?? legacyItem.image;
+  if (!fallbackImage) return undefined;
 
   return {
     ...item,
+    id,
+    name: typeof item.name === "string" && item.name.trim() ? item.name : "Untitled item",
     category,
-    originalImageDataUrl: item.originalImageDataUrl ?? legacyItem.imageUri ?? item.cutoutImageDataUrl,
-    cutoutImageDataUrl: item.cutoutImageDataUrl ?? legacyItem.imageUri ?? item.originalImageDataUrl,
+    originalImageDataUrl: item.originalImageDataUrl ?? legacyItem.imageUri ?? legacyItem.imageUrl ?? legacyItem.image ?? fallbackImage,
+    cutoutImageDataUrl: item.cutoutImageDataUrl ?? legacyItem.imageUrl ?? legacyItem.imageUri ?? legacyItem.image ?? fallbackImage,
     ...(item.transformedCutoutDataUrl ? { transformedCutoutDataUrl: item.transformedCutoutDataUrl } : {}),
     transform: item.transform ?? { mode: "none", scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, rotation: 0 },
     x: Number.isFinite(item.x) ? item.x : placement.x,
@@ -57,20 +66,14 @@ const normalizeClothingItem = (item: ClothingItem): ClothingItem | undefined => 
     scale: Number.isFinite(item.scale) ? item.scale : placement.scale,
     rotation: Number.isFinite(item.rotation) ? item.rotation : placement.rotation,
     layerOrder: Number.isFinite(item.layerOrder) ? item.layerOrder : placement.layerOrder,
-    placement:
-      item.placement ??
-      legacyPlacementToNormalized(category, {
-        x: Number.isFinite(item.x) ? item.x : placement.x,
-        y: Number.isFinite(item.y) ? item.y : placement.y,
-        scale: Number.isFinite(item.scale) ? item.scale : placement.scale,
-        rotation: Number.isFinite(item.rotation) ? item.rotation : placement.rotation,
-        layerOrder: Number.isFinite(item.layerOrder) ? item.layerOrder : placement.layerOrder
-      })
+    placement: normalizePlacement(item.placement, category, item, placement),
+    createdAt: item.createdAt ?? now,
+    updatedAt: item.updatedAt
   };
 };
 
 const normalizeSavedClothingItems = (items: ClothingItem[]) =>
-  items
+  (Array.isArray(items) ? items : [])
     .filter((item) => !(item as ClothingItem & { isPlaceholder?: boolean }).isPlaceholder)
     .map(normalizeClothingItem)
     .filter((item): item is ClothingItem => item !== undefined);
@@ -97,6 +100,45 @@ const selectedItemsFromClothing = (items: ClothingItem[]): SelectedItems => ({
   dress: items.find((item) => item.category === "dress")?.id ?? null,
   jacket: items.find((item) => item.category === "jacket")?.id ?? null
 });
+
+const normalizePlacement = (
+  placement: ClothingItem["placement"],
+  category: ClothingCategory,
+  item: ClothingItem,
+  fallbackPlacement: ReturnType<typeof getDefaultPlacementForCategory>
+) => {
+  if (
+    placement &&
+    Number.isFinite(placement.xPercent) &&
+    Number.isFinite(placement.yPercent) &&
+    Number.isFinite(placement.scale) &&
+    Number.isFinite(placement.rotation) &&
+    Number.isFinite(placement.layerOrder)
+  ) {
+    return placement;
+  }
+
+  return legacyPlacementToNormalized(category, {
+    x: Number.isFinite(item.x) ? item.x : fallbackPlacement.x,
+    y: Number.isFinite(item.y) ? item.y : fallbackPlacement.y,
+    scale: Number.isFinite(item.scale) ? item.scale : fallbackPlacement.scale,
+    rotation: Number.isFinite(item.rotation) ? item.rotation : fallbackPlacement.rotation,
+    layerOrder: Number.isFinite(item.layerOrder) ? item.layerOrder : fallbackPlacement.layerOrder
+  });
+};
+
+const reconcileSelectedItems = (selectedItems: SelectedItems, clothingItems: ClothingItem[]) => {
+  const nextSelectedItems = { ...emptySelectedItems(), ...selectedItems };
+
+  categories.forEach((category) => {
+    const selectedId = nextSelectedItems[category];
+    if (selectedId && !clothingItems.some((item) => item.id === selectedId && item.category === category)) {
+      nextSelectedItems[category] = clothingItems.find((item) => item.category === category)?.id ?? null;
+    }
+  });
+
+  return nextSelectedItems;
+};
 
 export const useClosetStore = create<ClosetState>((set, get) => ({
   clothingItems: [],
@@ -140,15 +182,17 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
     };
 
     set((state) => {
-      const selectedItems = { ...state.selectedItems };
+      let selectedItems = { ...state.selectedItems };
       if (previousCategory !== nextCategory && selectedItems[previousCategory] === id) {
         selectedItems[previousCategory] = null;
         selectedItems[nextCategory] = id;
       }
+      const clothingItems = state.clothingItems.map((entry) => (entry.id === id ? updatedItem : entry));
+      selectedItems = reconcileSelectedItems(selectedItems, clothingItems);
 
       const nextState = {
         ...state,
-        clothingItems: state.clothingItems.map((entry) => (entry.id === id ? updatedItem : entry)),
+        clothingItems,
         selectedItems
       };
       void localClosetStorage.updateClothingItem(updatedItem);
@@ -162,9 +206,9 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
 
     set((state) => {
       const clothingItems = state.clothingItems.filter((entry) => entry.id !== id);
-      const selectedItems = Object.fromEntries(
+      const selectedItems = reconcileSelectedItems(Object.fromEntries(
         categories.map((category) => [category, state.selectedItems[category] === id ? null : state.selectedItems[category] ?? null])
-      ) as SelectedItems;
+      ) as SelectedItems, clothingItems);
       const nextState = {
         ...state,
         clothingItems,
@@ -223,7 +267,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
       ...state,
       selectedItems: {
         ...state.selectedItems,
-        [category]: id ?? null
+        [category]: id && state.clothingItems.some((item) => item.id === id && item.category === category) ? id : null
       }
     }));
   },
@@ -360,7 +404,7 @@ export const useClosetStore = create<ClosetState>((set, get) => ({
         clothingItems,
         outfits: outfits.map(normalizeOutfit),
         models: normalizedModels,
-        selectedItems: selectedItemsFromClothing(clothingItems),
+        selectedItems: reconcileSelectedItems(selectedItemsFromClothing(clothingItems), clothingItems),
         activeModelId: normalizedActiveModel?.id,
         customModelUri: normalizedActiveModel?.imageDataUrl,
         isHydrated: true

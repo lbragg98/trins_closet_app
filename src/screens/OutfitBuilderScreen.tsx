@@ -1,5 +1,5 @@
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AppText } from "../components/AppText";
 import { CategoryOrbs, OrbCategory } from "../components/CategoryOrbs";
@@ -31,12 +31,21 @@ export function OutfitBuilderScreen() {
 
   const getRenderedItem = (category: ClothingCategory) => {
     if (previewItem?.category === category) {
-      return previewItem.itemId ? clothingItems.find((item) => item.id === previewItem.itemId) : undefined;
+      return previewItem.itemId ? clothingItems.find((item) => item.id === previewItem.itemId && item.category === category) : undefined;
     }
 
     const selectedId = selectedItems[category];
-    return selectedId ? clothingItems.find((item) => item.id === selectedId) : undefined;
+    return selectedId ? clothingItems.find((item) => item.id === selectedId && item.category === category) : undefined;
   };
+
+  useEffect(() => {
+    if (!previewItem?.itemId) return;
+
+    const previewStillExists = clothingItems.some(
+      (item) => item.id === previewItem.itemId && item.category === previewItem.category
+    );
+    if (!previewStillExists) setPreviewItem(undefined);
+  }, [clothingItems, previewItem]);
 
   const handleSave = () => {
     saveOutfit();
@@ -63,7 +72,7 @@ export function OutfitBuilderScreen() {
   };
 
   const activeItems = activeCategory
-    ? clothingItems.filter((item) => item.category === activeCategory)
+    ? clothingItems.filter((item) => item?.id && item.category === activeCategory)
     : [];
 
   return (
@@ -92,7 +101,7 @@ export function OutfitBuilderScreen() {
             <ClothingCarousel
               activeCategory={activeCategory}
               items={activeItems}
-              selectedItemId={selectedItems[activeCategory] ?? undefined}
+              selectedItemId={selectedItems[activeCategory] ?? null}
               onPreviewChange={(item) => {
                 setPreviewItem({
                   category: activeCategory,

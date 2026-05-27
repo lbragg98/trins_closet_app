@@ -33,14 +33,22 @@ export async function saveClothingItem(item: ClothingItem) {
 
 export async function getClothingItems() {
   const items: ClothingItem[] = [];
-  await clothingStore.iterate<ClothingItem, void>((item) => {
-    items.push(item);
-  });
-  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  try {
+    await clothingStore.iterate<ClothingItem, void>((item) => {
+      if (item && typeof item === "object") items.push(item);
+    });
+    return items.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  } catch {
+    return [];
+  }
 }
 
 export async function getClothingItemById(id: string) {
-  return clothingStore.getItem<ClothingItem>(id);
+  try {
+    return clothingStore.getItem<ClothingItem>(id);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function updateClothingItem(item: ClothingItem) {
@@ -74,10 +82,14 @@ export async function saveOutfit(outfit: Outfit) {
 
 export async function getOutfits() {
   const outfits: Outfit[] = [];
-  await outfitStore.iterate<Outfit, void>((outfit) => {
-    outfits.push(outfit);
-  });
-  return outfits.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  try {
+    await outfitStore.iterate<Outfit, void>((outfit) => {
+      if (outfit && typeof outfit === "object") outfits.push(outfit);
+    });
+    return outfits.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteOutfit(id: string) {
@@ -93,7 +105,11 @@ export async function setCustomModelUri(uri?: string) {
 }
 
 export async function getCustomModelUri() {
-  return preferenceStore.getItem<string>("customModelUri");
+  try {
+    return preferenceStore.getItem<string>("customModelUri");
+  } catch {
+    return undefined;
+  }
 }
 
 export async function saveModel(model: SavedModel) {
@@ -106,14 +122,22 @@ export async function saveModel(model: SavedModel) {
 
 export async function getModels() {
   const models: SavedModel[] = [];
-  await modelStore.iterate<SavedModel, void>((model) => {
-    models.push(model);
-  });
-  return models.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  try {
+    await modelStore.iterate<SavedModel, void>((model) => {
+      if (model && typeof model === "object") models.push(model);
+    });
+    return models.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  } catch {
+    return [];
+  }
 }
 
 export async function getModelById(id: string) {
-  return modelStore.getItem<SavedModel>(id);
+  try {
+    return modelStore.getItem<SavedModel>(id);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function updateModel(id: string, updates: Partial<SavedModel>) {
@@ -157,7 +181,10 @@ export async function setActiveModel(id?: string) {
 }
 
 export async function getActiveModel() {
-  const [models, activeModelId] = await Promise.all([getModels(), preferenceStore.getItem<string>("activeModelId")]);
+  const [models, activeModelId] = await Promise.all([
+    getModels(),
+    preferenceStore.getItem<string>("activeModelId").catch(() => undefined)
+  ]);
   if (models.length === 0) return undefined;
 
   return (

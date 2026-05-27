@@ -11,7 +11,7 @@ import { OrbCategory } from "./CategoryOrbs";
 type ClothingCarouselProps = {
   activeCategory: OrbCategory;
   items: ClothingItem[];
-  selectedItemId?: string;
+  selectedItemId?: string | null;
   onPreviewChange: (item?: ClothingItem) => void;
   onConfirmItem: (item?: ClothingItem) => void;
 };
@@ -53,9 +53,13 @@ export function ClothingCarousel({
   const snapTimer = useRef<ReturnType<typeof setTimeout>>();
   const lastTap = useRef(0);
   const onPreviewChangeRef = useRef(onPreviewChange);
-  const itemSignature = items.map((item) => `${item.id}:${item.updatedAt ?? item.createdAt}:${item.name}`).join("|");
+  const validItems = useMemo(
+    () => items.filter((item) => item?.id && item.category === activeCategory),
+    [activeCategory, items]
+  );
+  const itemSignature = validItems.map((item) => `${item.id}:${item.updatedAt ?? item.createdAt}:${item.name}`).join("|");
   const carouselEntries = useMemo<CarouselEntry[]>(
-    () => [{ type: "none", id: "none" }, ...items.map((item) => ({ type: "item" as const, id: item.id, item }))],
+    () => [{ type: "none", id: "none" }, ...validItems.map((item) => ({ type: "item" as const, id: item.id, item }))],
     [itemSignature]
   );
 
@@ -82,6 +86,7 @@ export function ClothingCarousel({
   };
 
   const visibleItems = useMemo(() => {
+    if (validItems.length === 0) return [];
     if (carouselEntries.length === 0) return [];
 
     return virtualOffsets.map((offset) => {
@@ -92,22 +97,26 @@ export function ClothingCarousel({
         offset
       };
     });
-  }, [carouselEntries, currentIndex]);
+  }, [carouselEntries, currentIndex, validItems.length]);
 
   useEffect(() => {
-    const selectedIndex = Math.max(
-      0,
-      carouselEntries.findIndex((entry) => entry.type === "item" && entry.item.id === selectedItemId)
-    );
+    const selectedEntryIndex = carouselEntries.findIndex((entry) => entry.type === "item" && entry.item.id === selectedItemId);
+    const selectedIndex = selectedItemId === null ? 0 : selectedEntryIndex >= 0 ? selectedEntryIndex : validItems.length > 0 ? 1 : 0;
     const nextIndex = carouselEntries.length > 0 ? selectedIndex : 0;
     x.set(0);
     currentIndexRef.current = nextIndex;
     setCurrentIndex(nextIndex);
 
     return clearSnapTimer;
-  }, [activeCategory, itemSignature, selectedItemId, x]);
+  }, [activeCategory, carouselEntries.length, itemSignature, selectedItemId, validItems.length, x]);
 
   useEffect(() => {
+    if (validItems.length === 0) {
+      currentIndexRef.current = 0;
+      onPreviewChangeRef.current(undefined);
+      return;
+    }
+
     const wrappedIndex = wrapIndex(currentIndex, carouselEntries.length);
     if (wrappedIndex !== currentIndex) {
       currentIndexRef.current = wrappedIndex;
@@ -118,7 +127,7 @@ export function ClothingCarousel({
     currentIndexRef.current = wrappedIndex;
     const entry = carouselEntries[wrappedIndex];
     onPreviewChangeRef.current(entry?.type === "item" ? entry.item : undefined);
-  }, [carouselEntries, currentIndex]);
+  }, [carouselEntries, currentIndex, validItems.length]);
 
   const confirmCurrentItem = () => {
     const activeEntry = carouselEntries[currentIndexRef.current];
@@ -126,6 +135,8 @@ export function ClothingCarousel({
   };
 
   const handleDragEnd = () => {
+    if (validItems.length === 0) return;
+
     const offset = x.get();
     setCurrentIndex((previousIndex) => {
       let nextIndex = previousIndex;
@@ -142,6 +153,19 @@ export function ClothingCarousel({
     snapOffsetToZero();
     scheduleSnap();
   };
+
+  if (validItems.length === 0) {
+    return (
+      <View pointerEvents="box-none" style={styles.emptyWrap}>
+        <View style={[styles.emptyMessage, { backgroundColor: "rgba(35, 18, 55, 0.84)" }]}>
+          <AppText style={styles.emptyTitle}>No items here yet</AppText>
+          <AppText muted style={styles.emptySubtitle}>
+            Add clothing to use this category
+          </AppText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View pointerEvents="box-none" style={styles.wrap}>
@@ -165,7 +189,8 @@ export function ClothingCarousel({
           const isCentered = offset === 0;
           const isNone = entry.type === "none";
           const isSelected = isNone ? selectedItemId === undefined : entry.item.id === selectedItemId;
-          const itemName = isNone ? "None" : entry.item.name;
+          const itemName = isNone ? "None" : entry.item.name || "Untitled item";
+          const imageUri = isNone ? undefined : getDisplayCutoutUri(entry.item);
 
           return (
             <motion.div
@@ -210,8 +235,12 @@ export function ClothingCarousel({
                     <View style={styles.noneIcon}>
                       <AppText style={styles.noneIconText}>None</AppText>
                     </View>
+                  ) : imageUri ? (
+                    <Image source={{ uri: imageUri }} resizeMode="contain" style={styles.image} />
                   ) : (
-                    <Image source={{ uri: getDisplayCutoutUri(entry.item) }} resizeMode="contain" style={styles.image} />
+                    <View style={styles.missingImage}>
+                      <AppText style={styles.missingImageText}>No image</AppText>
+                    </View>
                   )}
                 </View>
                 <AppText style={styles.itemName} numberOfLines={1}>
@@ -276,6 +305,21 @@ const styles = StyleSheet.create({
   noneIconText: {
     color: colors.accentSoft,
     fontSize: 11,
+    fontWeight: "900"
+  },
+  missingImage: {
+    width: 64,
+    height: 56,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 232, 163, 0.46)",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 249, 255, 0.1)"
+  },
+  missingImageText: {
+    color: colors.accentSoft,
+    fontSize: 10,
     fontWeight: "900"
   },
   itemName: {

@@ -42,6 +42,12 @@ export function AddClothingScreen() {
 
   const isDark = scheme === "dark";
   const isEditing = !!editItemId;
+  const closeMissingEdit = () => {
+    (navigation as unknown as { navigate: (screen: string) => void; setParams: (params: RootTabParamList["Add"]) => void }).setParams({
+      editItemId: undefined
+    });
+    (navigation as unknown as { navigate: (screen: string) => void }).navigate("Closet");
+  };
 
   useEffect(() => {
     if (!editingItem) return;
@@ -220,10 +226,10 @@ export function AddClothingScreen() {
       setStatus("success");
       setStatusMessage("Clothing item updated locally.");
       Alert.alert("Updated", `${trimmedName} was saved.`);
-      (navigation as { navigate: (screen: string) => void; setParams: (params: RootTabParamList["Add"]) => void }).setParams({
+      (navigation as unknown as { navigate: (screen: string) => void; setParams: (params: RootTabParamList["Add"]) => void }).setParams({
         editItemId: undefined
       });
-      (navigation as { navigate: (screen: string) => void }).navigate("Closet");
+      (navigation as unknown as { navigate: (screen: string) => void }).navigate("Closet");
       return;
     }
 
@@ -242,6 +248,20 @@ export function AddClothingScreen() {
     setStatusMessage("Clothing item saved locally.");
     Alert.alert("Added", `${trimmedName} is now in your closet.`);
   };
+
+  if (isEditing && !editingItem) {
+    return (
+      <ScreenScaffold>
+        <View style={styles.missingEdit}>
+          <AppText style={sharedStyles.title}>Item not found</AppText>
+          <AppText muted style={styles.subtitle}>
+            This clothing item may have been deleted or moved. Return to the closet and choose another item.
+          </AppText>
+          <PrimaryButton title="Back to Closet" onPress={closeMissingEdit} />
+        </View>
+      </ScreenScaffold>
+    );
+  }
 
   return (
     <ScreenScaffold>
@@ -406,6 +426,10 @@ const styles = StyleSheet.create({
   content: {
     gap: 20,
     paddingBottom: 24
+  },
+  missingEdit: {
+    gap: 16,
+    paddingVertical: 24
   },
   header: {
     paddingTop: 8
